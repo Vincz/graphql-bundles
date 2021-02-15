@@ -1,0 +1,60 @@
+{
+    "name": "overblog/graphql-configuration-metadata-bundle",
+    "description": "The Metadata annotations/attributes configuration parser module for overblog/graphql-bundle",
+    "type": "symfony-bundle",
+    "repositories": {
+        "overblog/graphql-bundle": {
+            "type": "path",
+            "url": "../../GraphQLBundle",
+            "options": {
+                "symlink": true
+            }
+        }
+    },
+    "require-dev": {
+        "overblog/graphql-bundle": "@dev",
+        "phpunit/phpunit": "^9.4",
+        "symfony/yaml": "^4.4 || ^5.0",
+        "phpstan/extension-installer": "^1.0",
+        "phpstan/phpstan": "^0.12.58",
+        "phpstan/phpstan-phpunit": "^0.12.11",
+        "phpstan/phpstan-symfony": "^0.12.6",
+        "symfony/phpunit-bridge": "^4.4 || ^5.0",
+        "doctrine/annotations": "^1.11",
+        "doctrine/cache": "^1.10",
+        "doctrine/orm": "^2.8"
+    },
+    "autoload": {
+        "psr-4": {
+            "Overblog\\GraphQL\\Bundle\\ConfigurationMetadataBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Overblog\\GraphQL\\Bundle\\ConfigurationMetadataBundle\\Tests\\": "tests/"
+        }
+    },
+    "license": "MIT",
+    "scripts": {
+        "test": "vendor/bin/phpunit --color=always -v --debug",
+        "static-analysis": [
+            "phpstan analyse --ansi --memory-limit=1G"
+        ],
+        "install-cs": "test -f php-cs-fixer.phar || wget https://github.com/FriendsOfPHP/PHP-CS-Fixer/releases/download/v2.16.4/php-cs-fixer.phar -O php-cs-fixer.phar",
+        "fix-cs": [
+            "@install-cs",
+            "@php php-cs-fixer.phar fix --diff -v --allow-risky=yes --ansi"
+        ],
+        "check-cs": [
+            "@install-cs",
+            "@php php-cs-fixer.phar fix --dry-run --diff -v --allow-risky=yes --ansi"
+        ],
+        "code-quality": [
+            "rm composer.lock",
+            "@composer install --ansi",
+            "@static-analysis",
+            "@bench",
+            "@check-cs"
+        ]
+    }
+}

@@ -1,0 +1,57 @@
+parameters: ~
+
+services:
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\EnumConfiguration:
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Enum',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\InputConfiguration:
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Input',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\InterfaceConfiguration:
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\TypeInterface',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\ProviderConfiguration:
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Provider',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\ScalarConfiguration:
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Scalar',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\TypeConfiguration:
+        arguments:
+            - '@Overblog\GraphQL\Bundle\TypeGuesser\TypeGuesser'
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Type',
+              }
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Provider',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\UnionConfiguration:
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Union',
+              }

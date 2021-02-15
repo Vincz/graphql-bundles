@@ -1,0 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests;
+
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\AnnotationReader;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
+
+class ConfigurationAnnotationParserTest extends ConfigurationMetadataParserTest
+{
+    public function getMetadataReader():MetadataReaderInterface
+    {
+        return new AnnotationReader();
+    }
+}

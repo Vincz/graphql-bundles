@@ -1,0 +1,1 @@
+value: !php/const Overblog\GraphQL\Bundle\ConfigurationYamlBundle\Tests\Constants::TWILEK

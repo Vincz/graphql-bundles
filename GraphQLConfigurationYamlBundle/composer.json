@@ -1,0 +1,22 @@
+{
+  "name": "overblog/graphql-configuration-yaml-bundle",
+  "description": "The Yaml configuration parser module for overblog/graphql-bundle",
+  "type": "symfony-bundle",
+  "require-dev": {
+    "overblog/graphql-bundle": "dev-master",
+    "phpunit/phpunit": "^9.4",
+    "symfony/yaml": "^4.4 || ^5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Overblog\\GraphQL\\Bundle\\ConfigurationYamlBundle\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Overblog\\GraphQL\\Bundle\\ConfigurationYamlBundle\\Tests\\": "tests/"
+    }
+  },
+  "license": "MIT",
+  "require": {}
+}
