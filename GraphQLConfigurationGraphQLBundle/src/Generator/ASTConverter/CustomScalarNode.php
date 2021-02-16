@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQLBundle\Config\Parser\GraphQL\ASTConverter;
+namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter;
 
 use GraphQL\Language\AST\Node;
 use RuntimeException;

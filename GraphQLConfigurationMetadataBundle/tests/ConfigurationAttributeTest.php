@@ -10,7 +10,7 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInt
 /**
  * @requires PHP 8.
  */
-class ConfigurationAttributeParserTest extends ConfigurationMetadataParserTest
+class ConfigurationAttributeTest extends ConfigurationMetadataTest
 {
     public function getMetadataReader(): MetadataReaderInterface
     {

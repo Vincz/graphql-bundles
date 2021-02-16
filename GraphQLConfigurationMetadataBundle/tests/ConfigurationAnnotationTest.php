@@ -7,7 +7,7 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\AnnotationReader;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
 
-class ConfigurationAnnotationParserTest extends ConfigurationMetadataParserTest
+class ConfigurationAnnotationTest extends ConfigurationMetadataTest
 {
     public function getMetadataReader():MetadataReaderInterface
     {

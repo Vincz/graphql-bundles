@@ -30,7 +30,7 @@ use Symfony\Component\Finder\Finder;
 
 use function sprintf;
 
-abstract class ConfigurationMetadataParserTest extends WebTestCase
+abstract class ConfigurationMetadataTest extends WebTestCase
 {
     protected array $config = [];
     protected TypeGuesser $typeGuesser;

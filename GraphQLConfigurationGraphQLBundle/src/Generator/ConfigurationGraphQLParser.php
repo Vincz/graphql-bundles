@@ -76,7 +76,7 @@ class ConfigurationGraphQLParser extends ConfigurationFilesParser
              * @var ObjectTypeDefinitionNode|InputObjectTypeDefinitionNode|EnumTypeDefinitionNode $typeDef
              */
             if (isset($typeDef->kind) && in_array($typeDef->kind, array_keys(self::DEFINITION_TYPE_MAPPING))) {
-                $class = sprintf('\\%s\\GraphQL\\ASTConverter\\%sNode', __NAMESPACE__, ucfirst(self::DEFINITION_TYPE_MAPPING[$typeDef->kind]));
+                $class = sprintf('\\%s\\ASTConverter\\%sNode', __NAMESPACE__, ucfirst(self::DEFINITION_TYPE_MAPPING[$typeDef->kind]));
                 $typesConfig[$typeDef->name->value] = call_user_func([$class, 'toConfig'], $typeDef);
             } else {
                 self::throwUnsupportedDefinitionNode($typeDef);
