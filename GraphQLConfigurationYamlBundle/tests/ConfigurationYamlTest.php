@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationYamlBundle\Tests;
 
-use Overblog\GraphQL\Bundle\ConfigurationYamlBundle\Generator\ConfigurationYamlParser;
+use Overblog\GraphQL\Bundle\ConfigurationYamlBundle\ConfigurationYamlParser;
 use SplFileInfo;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 

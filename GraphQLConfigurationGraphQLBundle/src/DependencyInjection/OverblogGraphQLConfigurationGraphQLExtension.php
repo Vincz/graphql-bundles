@@ -13,7 +13,14 @@ class OverblogGraphQLConfigurationGraphQLExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container): void
     {
+        $config = $this->processConfiguration(new Configuration(), $configs);
+        $container->setParameter("graphql.configuration.directories.graphql", $config['mapping']['directories']);
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
+    }
+
+    public function getAlias(): string
+    {
+        return Configuration::NAME;
     }
 }

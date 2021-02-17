@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationYamlBundle\Generator;
+namespace Overblog\GraphQL\Bundle\ConfigurationYamlBundle;
 
-use Overblog\GraphQLBundle\Config\Generator\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
 use SplFileInfo;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -33,6 +33,7 @@ class ConfigurationYamlParser extends ConfigurationFilesParser
     public function getDirectories(): array
     {
         $directories = [];
+
         if ($this->rootDirectory) {
             $directories[] = sprintf('%s/config/graphql', $this->rootDirectory);
         }

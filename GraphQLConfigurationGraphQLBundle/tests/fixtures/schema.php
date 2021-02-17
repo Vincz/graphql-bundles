@@ -142,9 +142,9 @@ return [
         'type' => 'custom-scalar',
         'config' => [
             'description' => null,
-            'serialize' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
-            'parseValue' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
-            'parseLiteral' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
+            'serialize' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
+            'parseValue' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
+            'parseLiteral' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
         ],
     ],
 ];

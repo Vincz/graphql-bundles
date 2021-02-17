@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser;
 
-use iterator;
 use ReflectionClass;
 use Reflector;
 
 class TypeGuesser implements TypeGuesserInterface
 {
-    protected iterator $extensions;
+    protected iterable $extensions;
 
-    public function __construct(iterator $extensions)
+    public function __construct(iterable $extensions)
     {
         $this->extensions = $extensions;
     }

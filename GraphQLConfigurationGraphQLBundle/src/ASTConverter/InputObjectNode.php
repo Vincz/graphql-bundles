@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter;
+namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 class InputObjectNode extends ObjectNode
 {

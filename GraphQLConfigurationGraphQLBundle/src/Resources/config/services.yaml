@@ -1,10 +1,10 @@
 parameters:
 
 services:
-    Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ConfigurationGraphQLParser:
+    Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ConfigurationGraphQLParser:
         arguments:
-            - ["%kernel.project_dir%/config/configuration/mapping"]
-            - "%kernel.project_dir%"
-            - "%kernel.bundles%"
+            - '%graphql.configuration.directories.graphql%'
+            - '%kernel.project_dir%'
+            - '%kernel.bundles%'
         tags:
-            - { name: "overblog_graphql.configuration_generator" }
+            - { name: 'overblog_graphql.configuration.provider' }

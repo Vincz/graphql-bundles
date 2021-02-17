@@ -9,16 +9,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    public const NAME = 'overblog_graphql.configuration_xml';
-
-    /**
-     * @param bool $debug Whether to use the debug mode
-     */
-    public function __construct(bool $debug, string $cacheDir = null)
-    {
-        $this->debug = (bool) $debug;
-        $this->cacheDir = $cacheDir;
-    }
+    public const NAME = 'overblog_graphql_configuration_xml';
 
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -29,7 +20,15 @@ class Configuration implements ConfigurationInterface
         // @phpstan-ignore-next-line
         $rootNode
             ->children()
-                ->scalarNode('coucou')->end()
+                ->arrayNode('mapping')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('directories')
+                            ->defaultValue([])
+                            ->prototype('scalar')->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

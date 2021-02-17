@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Tests;
 
 use Exception;
-use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ConfigurationGraphQLParser;
-use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter\CustomScalarNode;
+use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ConfigurationGraphQLParser;
+use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use function sprintf;
@@ -29,9 +29,9 @@ class ConfigurationGraphQLTest extends WebTestCase
 
     protected function parseFile(string $dirname)
     {
-        $generator = new ConfigurationGraphQLParser([$dirname]);
+        $parser = new ConfigurationGraphQLParser([$dirname]);
 
-        return $generator->getConfiguration();
+        return $parser->getConfiguration();
     }
 
     public function testParse(): void
@@ -39,7 +39,6 @@ class ConfigurationGraphQLTest extends WebTestCase
         $dirname = __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'schema';
         $expected = include __DIR__.'/fixtures/schema.php';
         $config = $this->parseFile($dirname);
-        //$config = GraphQLParser::parse(new SplFileInfo($fileName), $this->containerBuilder);
         $this->assertSame($expected, self::cleanConfig($config));
     }
 
@@ -48,7 +47,6 @@ class ConfigurationGraphQLTest extends WebTestCase
         $dirname = __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'empty';
         $config = $this->parseFile($dirname);
 
-        //$config = GraphQLParser::parse(new SplFileInfo($fileName), $this->containerBuilder);
         $this->assertSame([], $config);
     }
 
@@ -58,7 +56,6 @@ class ConfigurationGraphQLTest extends WebTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(sprintf('An error occurred while parsing the file "%s"', $dirname.DIRECTORY_SEPARATOR.'invalid.graphql'));
         $this->parseFile($dirname);
-        //GraphQLParser::parse(new SplFileInfo($fileName), $this->containerBuilder);
     }
 
     public function testParseNotSupportedSchemaDefinition(): void
@@ -67,7 +64,6 @@ class ConfigurationGraphQLTest extends WebTestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Schema definition is not supported right now.');
         $this->parseFile($dirname);
-        //GraphQLParser::parse(new SplFileInfo($fileName), $this->containerBuilder);
     }
 
     public function testCustomScalarTypeDefaultFieldValue(): void

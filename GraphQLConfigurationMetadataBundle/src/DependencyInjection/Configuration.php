@@ -6,19 +6,13 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\DependencyInjectio
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use const PHP_VERSION_ID;
 
 class Configuration implements ConfigurationInterface
 {
-    public const NAME = 'overblog_graphql.configuration_metadata';
-
-    /**
-     * @param bool $debug Whether to use the debug mode
-     */
-    public function __construct(bool $debug, string $cacheDir = null)
-    {
-        $this->debug = (bool) $debug;
-        $this->cacheDir = $cacheDir;
-    }
+    public const NAME = 'overblog_graphql_configuration_metadata';
+    public const READER_ANNOTATION = 'annotation';
+    public const READER_ATTRIBUTE = 'attribute';
 
     public function getConfigTreeBuilder(): TreeBuilder
     {
@@ -29,7 +23,28 @@ class Configuration implements ConfigurationInterface
         // @phpstan-ignore-next-line
         $rootNode
             ->children()
-                ->scalarNode('coucou')->end()
+                ->enumNode('reader')
+                    ->defaultValue(PHP_VERSION_ID < 80000 ? self::READER_ANNOTATION : self::READER_ATTRIBUTE)
+                    ->values([self::READER_ANNOTATION, self::READER_ATTRIBUTE])
+                ->end()
+                ->arrayNode('mapping')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('directories')
+                            ->defaultValue([])
+                            ->prototype('scalar')->end()
+                        ->end()
+                    ->end()
+                ->end()
+                ->arrayNode('type_guessing')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->arrayNode('doctrine')
+                            ->defaultValue([])
+                            ->prototype('scalar')->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;

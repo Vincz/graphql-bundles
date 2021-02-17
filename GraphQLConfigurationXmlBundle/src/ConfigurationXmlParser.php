@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationXmlBundle\Generator;
+namespace Overblog\GraphQL\Bundle\ConfigurationXmlBundle;
 
 use DOMElement;
-use Overblog\GraphQLBundle\Config\Generator\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
 use SplFileInfo;
 use Symfony\Component\Config\Util\XmlUtils;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;

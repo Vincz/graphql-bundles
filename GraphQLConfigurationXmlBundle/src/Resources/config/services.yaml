@@ -1,10 +1,10 @@
 parameters:
 
 services:
-    Overblog\GraphQL\Bundle\ConfigurationXmlBundle\Generator\ConfigurationXmlParser:
+    Overblog\GraphQL\Bundle\ConfigurationXmlBundle\ConfigurationXmlParser:
         arguments:
-            - ["%kernel.project_dir%/config/configuration/mapping"]
-            - "%kernel.project_dir%"
-            - "%kernel.bundles%"
+            - '%graphql.configuration.directories.xml%'
+            - '%kernel.project_dir%'
+            - '%kernel.bundles%'
         tags:
-            - { name: "overblog_graphql.configuration_generator" }
+            - { name: 'overblog_graphql.configuration.provider' }

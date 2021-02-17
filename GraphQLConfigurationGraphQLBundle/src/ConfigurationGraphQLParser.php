@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator;
+namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle;
 
 use Exception;
 use GraphQL\Language\AST\DefinitionNode;
@@ -11,7 +11,7 @@ use GraphQL\Language\AST\InputObjectTypeDefinitionNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
 use GraphQL\Language\Parser;
-use Overblog\GraphQLBundle\Config\Generator\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
 use SplFileInfo;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use function array_keys;

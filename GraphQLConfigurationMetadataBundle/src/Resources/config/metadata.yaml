@@ -1,7 +1,22 @@
 parameters: ~
 
 services:
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\AnnotationReader:
+        public: true
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\AttributeReader:
+        public: true
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration:
+        abstract: true
+        arguments:
+            - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
+            - '@overblog_graphql.metadata.reader'
+            - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuesser'
+            - '%overblog_graphql.schemas%'
+
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\EnumConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
         tags:
             - {
                   name: 'overblog_graphql.metadata.handler',
@@ -9,6 +24,7 @@ services:
               }
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\InputConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
         tags:
             - {
                   name: 'overblog_graphql.metadata.handler',
@@ -16,20 +32,15 @@ services:
               }
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\InterfaceConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
         tags:
             - {
                   name: 'overblog_graphql.metadata.handler',
                   annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\TypeInterface',
               }
 
-    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\ProviderConfiguration:
-        tags:
-            - {
-                  name: 'overblog_graphql.metadata.handler',
-                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Provider',
-              }
-
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\ScalarConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
         tags:
             - {
                   name: 'overblog_graphql.metadata.handler',
@@ -37,8 +48,7 @@ services:
               }
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\TypeConfiguration:
-        arguments:
-            - '@Overblog\GraphQL\Bundle\TypeGuesser\TypeGuesser'
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
         tags:
             - {
                   name: 'overblog_graphql.metadata.handler',
@@ -50,8 +60,25 @@ services:
               }
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\UnionConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
         tags:
             - {
                   name: 'overblog_graphql.metadata.handler',
                   annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Union',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\RelayEdgeConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Relay\Edge',
+              }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\RelayConnectionConfiguration:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration
+        tags:
+            - {
+                  name: 'overblog_graphql.metadata.handler',
+                  annotationClass: 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Relay\Connection',
               }

@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle;
 
 use Doctrine\Common\Annotations\Reader;
-use iterator;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Annotation as Meta;
-use Overblog\GraphQLBundle\Config\Generator\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
 use ReflectionClass;
 use Reflector;
 use SplFileInfo;
@@ -26,7 +25,7 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
     protected array $providers = [];
     protected array $resolvers = [];
 
-    public function __construct(MetadataReaderInterface $metadataReader, ClassesTypesMap $classesTypesMap, iterator $resolvers, ...$args)
+    public function __construct(MetadataReaderInterface $metadataReader, ClassesTypesMap $classesTypesMap, iterable $resolvers, ...$args)
     {
         parent::__construct(...$args);
 

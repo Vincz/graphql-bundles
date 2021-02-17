@@ -1,45 +1,26 @@
 parameters: ~
 
 services:
+    overblog_graphql.arguments_transformer: '@Overblog\GraphQLBundle\Transformer\ArgumentsTransformer'
+
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ConfigurationMetadataParser:
         arguments:
-            - '@Overblog\GraphQL\Bundle\Reader\AnnotationReader'
+            - '@overblog_graphql.metadata.reader'
             - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
             - !tagged_iterator { tag: 'overblog_graphql.metadata.handler', index_by: 'annotationClass' }
+            - '%graphql.configuration.directories.metadata%'
             - '%kernel.project_dir%'
             - '%kernel.bundles%'
         tags:
-            - { name: 'overblog_graphql.configuration_generator' }
+            - { name: 'overblog_graphql.configuration.provider' }
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap:
         public: true
 
-    Overblog\GraphQL\Bundle\Reader\AnnotationReader:
-        public: true
-
-    Overblog\GraphQL\Bundle\TypeGuesser\TypeGuesser:
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Transformer\ArgumentsTransformer:
         arguments:
-            - !tagged_iterator 'overblog_graphql.metadata.type_guesser_extension'
-
-    Overblog\GraphQL\Bundle\TypeGuesser\Extension\TypeGuesserExtension:
-        abstract: true
-        arguments:
+            - '@?validator'
             - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
 
-    Overblog\GraphQL\Bundle\TypeGuesser\Extension\DocBlockTypeGuesserExtension:
-        parent: Overblog\GraphQL\Bundle\TypeGuesser\TypeGuesserExtension
-        targs:
-            - { name: 'overblog_graphql.metadata.type_guesser_extension', priority: 100 }
-
-    Overblog\GraphQL\Bundle\TypeGuesser\Extension\TypeHintTypeGuesserExtension:
-        parent: Overblog\GraphQL\Bundle\TypeGuesser\TypeGuesserExtension
-        targs:
-            - { name: 'overblog_graphql.metadata.type_guesser_extension', priority: 50 }
-
-    Overblog\GraphQL\Bundle\TypeGuesser\Extension\DoctrineTypeGuesserExtension:
-        parent: Overblog\GraphQL\Bundle\TypeGuesser\TypeGuesserExtension
-        targs:
-            - { name: 'overblog_graphql.metadata.type_guesser_extension', priority: 0 }
-        arguments:
-            - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
-            - []
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ExpressionFunction\Arguments:
+        tags: ['overblog_graphql.expression_function']

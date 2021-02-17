@@ -1,0 +1,27 @@
+services:
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuesser:
+        arguments:
+            - !tagged_iterator 'overblog_graphql.metadata.type_guesser_extension'
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\TypeGuesserExtension:
+        abstract: true
+        arguments:
+            - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\DocBlockTypeGuesserExtension:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\TypeGuesserExtension
+        tags:
+            - { name: 'overblog_graphql.metadata.type_guesser_extension', priority: 100 }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\TypeHintTypeGuesserExtension:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\TypeGuesserExtension
+        tags:
+            - { name: 'overblog_graphql.metadata.type_guesser_extension', priority: 50 }
+
+    Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\DoctrineTypeGuesserExtension:
+        parent: Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\TypeGuesserExtension
+        tags:
+            - { name: 'overblog_graphql.metadata.type_guesser_extension', priority: 0 }
+        arguments:
+            - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
+            - '%graphql.configuration.metadata.type_guesser.doctrine_mapping%'

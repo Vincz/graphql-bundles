@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Generator\ASTConverter;
+namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
 use GraphQL\Type\Definition\Directive;

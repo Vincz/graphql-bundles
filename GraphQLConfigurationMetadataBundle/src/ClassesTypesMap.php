@@ -11,6 +11,11 @@ class ClassesTypesMap
      */
     protected array $classesMap = [];
 
+    public function __construct(array $classesMap = [])
+    {
+        $this->classesMap = $classesMap;
+    }
+
     public function hasType(string $gqlType): bool
     {
         return isset($this->classesMap[$gqlType]);
