@@ -9,13 +9,13 @@ services:
             - '@Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap'
             - !tagged_iterator { tag: 'overblog_graphql.metadata.handler', index_by: 'annotationClass' }
             - '%graphql.configuration.directories.metadata%'
-            - '%kernel.project_dir%'
-            - '%kernel.bundles%'
         tags:
             - { name: 'overblog_graphql.configuration.provider' }
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap:
         public: true
+        arguments:
+            - '@Symfony\Contracts\Cache\CacheInterface'
 
     Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Transformer\ArgumentsTransformer:
         arguments:

@@ -6,9 +6,9 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle;
 
 use Doctrine\Common\Annotations\Reader;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\MetadataConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\MetadataConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation\Annotation as Meta;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
 use ReflectionClass;
 use Reflector;
@@ -25,9 +25,9 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
     protected array $providers = [];
     protected array $resolvers = [];
 
-    public function __construct(MetadataReaderInterface $metadataReader, ClassesTypesMap $classesTypesMap, iterable $resolvers, ...$args)
+    public function __construct(MetadataReaderInterface $metadataReader, ClassesTypesMap $classesTypesMap, iterable $resolvers, array $directories = [])
     {
-        parent::__construct(...$args);
+        parent::__construct($directories);
 
         $this->metadataReader = $metadataReader;
         $this->classesTypesMap = $classesTypesMap;
@@ -38,20 +38,6 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
     public function getSupportedExtensions(): array
     {
         return ['php'];
-    }
-
-    public function getDirectories(): array
-    {
-        $directories = [];
-        if ($this->rootDirectory) {
-            $directories[] = sprintf('%s/src/GraphQL', $this->rootDirectory);
-        }
-
-        foreach ($this->bundlesDirectories as $bundleDirectory) {
-            $directories[] = sprintf('%s/src/GraphQL', $bundleDirectory);
-        }
-
-        return array_unique([...$directories, ...$this->directories]);
     }
 
     public function getConfiguration(): array
@@ -67,6 +53,7 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
             $configuration = $configuration + $this->parseFile($file);
         }
 
+        $this->classesTypesMap->cache();
         return $configuration;
     }
 
@@ -87,7 +74,7 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
             $gqlTypes = [];
 
             foreach ($this->getMetadatas($reflectionClass) as $classMetadata) {
-                if ($classMetadata instanceof Meta) {
+                if ($classMetadata instanceof Metadata\Metadata) {
                     $resolver = $this->getResolver($classMetadata);
                     if ($resolver) {
                         if ($initializeClassesTypesMap) {
@@ -105,7 +92,7 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
         }
     }
 
-    protected function getResolver(Meta $classMetadata): ?MetadataConfiguration
+    protected function getResolver(Metadata\Metadata $classMetadata): ?MetadataConfiguration
     {
         foreach ($this->resolvers as $metadataClass => $resolver) {
             if ($classMetadata instanceof $metadataClass) {

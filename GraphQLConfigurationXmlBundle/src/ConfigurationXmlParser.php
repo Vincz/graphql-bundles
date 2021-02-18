@@ -7,8 +7,8 @@ namespace Overblog\GraphQL\Bundle\ConfigurationXmlBundle;
 use DOMElement;
 use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
 use SplFileInfo;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Util\XmlUtils;
-use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use function sprintf;
 
 class ConfigurationXmlParser extends ConfigurationFilesParser
@@ -16,20 +16,6 @@ class ConfigurationXmlParser extends ConfigurationFilesParser
     public function getSupportedExtensions(): array
     {
         return ['xml'];
-    }
-
-    public function getDirectories(): array
-    {
-        $directories = [];
-        if ($this->rootDirectory) {
-            $directories[] = sprintf('%s/config/graphql', $this->rootDirectory);
-        }
-
-        foreach ($this->bundlesDirectories as $bundleDirectory) {
-            $directories[] = sprintf('%s/Resources/config/graphql', $bundleDirectory);
-        }
-
-        return array_unique([...$directories, ...$this->directories]);
     }
 
     protected function parseFile(SplFileInfo $file): array
@@ -47,7 +33,7 @@ class ConfigurationXmlParser extends ConfigurationFilesParser
                 }
             }
         } catch (\InvalidArgumentException $e) {
-            throw new InvalidArgumentException(sprintf('Unable to parse file "%s".', $file), $e->getCode(), $e);
+            throw new InvalidConfigurationException(sprintf('The file "%s" does not contain valid XML.', $file), $e->getCode(), $e);
         }
 
         return $typesConfig;

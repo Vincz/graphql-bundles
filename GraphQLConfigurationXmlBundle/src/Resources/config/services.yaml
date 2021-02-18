@@ -4,7 +4,5 @@ services:
     Overblog\GraphQL\Bundle\ConfigurationXmlBundle\ConfigurationXmlParser:
         arguments:
             - '%graphql.configuration.directories.xml%'
-            - '%kernel.project_dir%'
-            - '%kernel.bundles%'
         tags:
             - { name: 'overblog_graphql.configuration.provider' }

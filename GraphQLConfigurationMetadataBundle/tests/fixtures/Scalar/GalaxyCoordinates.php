@@ -6,7 +6,7 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Sca
 
 use DateTimeInterface;
 use GraphQL\Language\AST\Node;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation as GQL;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 use function explode;
 use function implode;
 

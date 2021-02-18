@@ -4,16 +4,32 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle;
 
+use Symfony\Contracts\Cache\CacheInterface;
+
 class ClassesTypesMap
 {
+    const CACHE_KEY = 'overblog_graphql.classes_types_map';
+    protected ?CacheInterface $cache;
+    
     /**
      * @var array<string, array{class: string, type: string}>
      */
     protected array $classesMap = [];
 
-    public function __construct(array $classesMap = [])
+    public function __construct(CacheInterface $cache = null, array $classesMap = [])
     {
+        $this->cache = $cache;
         $this->classesMap = $classesMap;
+        if ($this->cache) {
+            $this->classesMap = $this->cache->get(self::CACHE_KEY, fn () => []);
+        }
+    }
+
+    public function cache()
+    {
+        if ($this->cache) {
+            $this->cache->get(self::CACHE_KEY, fn () => $this->classesMap, INF);
+        }
     }
 
     public function hasType(string $gqlType): bool

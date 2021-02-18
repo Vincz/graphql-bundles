@@ -42,20 +42,6 @@ class ConfigurationGraphQLParser extends ConfigurationFilesParser
         return ['graphql', 'graphqls'];
     }
 
-    public function getDirectories(): array
-    {
-        $directories = [];
-        if ($this->rootDirectory) {
-            $directories[] = sprintf('%s/config/graphql', $this->rootDirectory);
-        }
-
-        foreach ($this->bundlesDirectories as $bundleDirectory) {
-            $directories[] = sprintf('%s/Resources/config/graphql', $bundleDirectory);
-        }
-
-        return array_unique([...$directories, ...$this->directories]);
-    }
-
     protected function parseFile(SplFileInfo $file): array
     {
         $content = trim(file_get_contents($file->getPathname()));

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Input;
 
 use Doctrine\ORM\Mapping as ORM;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation as GQL;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
  * @GQL\Input

@@ -8,15 +8,15 @@ use ArrayIterator;
 use Exception;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ConfigurationMetadataParser;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\EnumConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\InputConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\InterfaceConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\ScalarConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\TypeConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\UnionConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\RelayEdgeConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Annotation as Metadata;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\RelayConnectionConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\EnumConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\InputConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\InterfaceConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\ScalarConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\TypeConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\UnionConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\RelayEdgeConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\RelayConnectionConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\DocBlockTypeGuesserExtension;
@@ -516,6 +516,18 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 ['builder' => 'relay-edge', 'builderConfig' => ['nodeType' => 'Character']],
             ],
         ]);
+    }
+
+    public function testInvalidMissingTypeFields(): void
+    {
+        try {
+            $file = __DIR__.'/fixtures/Invalid/missingFields';
+            $this->getConfiguration([$file]);
+            $this->fail('Missing type hint for auto-guessed argument should have raise an exception');
+        } catch (Exception $e) {
+            $this->assertInstanceOf(MetadataConfigurationException::class, $e);
+            $this->assertMatchesRegularExpression('/Argument n°1 "\$test"/', $e->getPrevious()->getMessage());
+        }
     }
 
     

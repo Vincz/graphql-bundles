@@ -9,6 +9,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
+use ReflectionClass;
 use const PHP_VERSION_ID;
 
 class OverblogGraphQLConfigurationMetadataExtension extends Extension
@@ -32,9 +33,6 @@ class OverblogGraphQLConfigurationMetadataExtension extends Extension
         
         // Set metadata reader alias
         $container->setAlias('overblog_graphql.metadata.reader', $readerService);
-
-        // Add mapping directories
-        $container->setParameter("graphql.configuration.directories.metadata", $config['mapping']['directories']);
         
         // Add doctrine mapping for Doctrine type guesser
         $container->setParameter("graphql.configuration.metadata.type_guesser.doctrine_mapping", $config['type_guessing']['doctrine']);
@@ -43,6 +41,32 @@ class OverblogGraphQLConfigurationMetadataExtension extends Extension
         $loader->load('type_guesser.yaml');
         $loader->load('services.yaml');
         $loader->load('metadata.yaml');
+
+        $directories = $this->resolveMappingDirectories($container, $config['mapping']);
+        $container->setParameter("graphql.configuration.directories.metadata", $directories);
+    }
+
+    protected function resolveMappingDirectories(ContainerBuilder $container, array $config): array
+    {
+        $rootDirectory = $container->getParameter('kernel.project_dir');
+        $bundles = $container->getParameter('kernel.bundles');
+        
+        $directories = [];
+        if ($config['auto_discover']['root_dir']) {
+            $directories[] = sprintf('%s/src/GraphQL', $rootDirectory);
+        }
+        if ($config['auto_discover']['bundles']) {
+            foreach ($bundles as $bundleClass) {
+                $directories[] = sprintf('%s/src/GraphQL', $this->resolveBundleDirectory($bundleClass));
+            }
+        }
+        
+        return [...$directories, ...$config['directories']];
+    }
+
+    protected function resolveBundleDirectory(string $bundleClass)
+    {
+        return dirname((new ReflectionClass($bundleClass))->getFileName());
     }
 
     public function getAlias(): string

@@ -47,7 +47,7 @@ class ArgumentsTest extends TestCase
         $validator = $this->createMock(RecursiveValidator::class);
         $validator->method('validate')->willReturn([]);
 
-        return new ArgumentsTransformer($validator, new ClassesTypesMap($classesMap));
+        return new ArgumentsTransformer($validator, new ClassesTypesMap(null, $classesMap));
     }
 
     /**

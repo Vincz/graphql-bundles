@@ -41,7 +41,7 @@ class ArgumentsTransformerTest extends TestCase
         $validator = $this->createMock(RecursiveValidator::class);
         $validator->method('validate')->willReturn($validateReturn ?: []);
 
-        return new ArgumentsTransformer($validator, new ClassesTypesMap($classesMap));
+        return new ArgumentsTransformer($validator, new ClassesTypesMap(null, $classesMap));
     }
 
     public function getResolveInfo(array $types): ResolveInfo
@@ -259,7 +259,7 @@ class ArgumentsTransformerTest extends TestCase
             new ConstraintViolationList([$violation1]),
             new ConstraintViolationList([$violation2])
         );
-        $builder = new ArgumentsTransformer($validator, new ClassesTypesMap([
+        $builder = new ArgumentsTransformer($validator, new ClassesTypesMap(null, [
             'InputType1' => ['type' => 'input', 'class' => 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\Transformer\InputType1'],
             'InputType2' => ['type' => 'input', 'class' => 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\Transformer\InputType2'],
         ]));
