@@ -15,7 +15,6 @@ use ReflectionMethod;
 use ReflectionProperty;
 use Reflector;
 use RuntimeException;
-use sprintf;
 use function apcu_enabled;
 
 class AnnotationReader implements MetadataReaderInterface
@@ -23,10 +22,12 @@ class AnnotationReader implements MetadataReaderInterface
     const METADATA_FORMAT = '@%s';
 
     protected ?Reader $annotationReader = null;
+    protected bool $useCache;
 
-    public function __construct(Reader $annotationReader = null)
+    public function __construct(Reader $annotationReader = null, bool $useCache = true)
     {
         $this->annotationReader = $annotationReader;
+        $this->useCache = $useCache;
     }
 
     public function formatMetadata(string $metadataType): string
@@ -58,17 +59,22 @@ class AnnotationReader implements MetadataReaderInterface
             }
 
             AnnotationRegistry::registerLoader('class_exists');
-            $cacheKey = md5(__DIR__);
-            // @codeCoverageIgnoreStart
-            if (extension_loaded('apcu') && apcu_enabled()) {
-                $annotationCache = new ApcuCache();
-            } else {
-                $annotationCache = new PhpFileCache(join(DIRECTORY_SEPARATOR, [sys_get_temp_dir(), $cacheKey]));
-            }
-            // @codeCoverageIgnoreEnd
-            $annotationCache->setNamespace($cacheKey);
+            $reader = new DotrineAnnotationReader();
+            if ($this->useCache) {
+                $cacheKey = md5(__DIR__);
+                // @codeCoverageIgnoreStart
+                if (extension_loaded('apcu') && apcu_enabled()) {
+                    $annotationCache = new ApcuCache();
+                } else {
+                    $annotationCache = new PhpFileCache(join(DIRECTORY_SEPARATOR, [sys_get_temp_dir(), $cacheKey]));
+                }
+                // @codeCoverageIgnoreEnd
+                $annotationCache->setNamespace($cacheKey);
 
-            $this->annotationReader = new CachedReader(new DotrineAnnotationReader(), $annotationCache, true);
+                $this->annotationReader = new CachedReader($reader, $annotationCache, true);
+            } else {
+                $this->annotationReader = $reader;
+            }
         }
 
         return $this->annotationReader;

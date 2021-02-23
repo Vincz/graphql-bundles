@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle;
 
-final class MetadataConfigurationException extends \RuntimeException
+use RuntimeException;
+
+final class MetadataConfigurationException extends RuntimeException
 {
 }

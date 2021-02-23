@@ -5,16 +5,17 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
-use Doctrine\Common\Annotations\NamedArgumentConstructorAnnotation;
+
 
 /**
  * Annotation for GraphQL input type.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  * @Target("CLASS")
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class Input extends Metadata implements NamedArgumentConstructorAnnotation
+final class Input extends Metadata
 {
     /**
      * Type name.

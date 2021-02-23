@@ -2,37 +2,31 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser;
+namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
+use Closure;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuesserInterface;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
 use ReflectionClass;
 use Reflector;
 
-abstract class MetadataConfiguration
+abstract class MetadataHandler
 {
-    const GQL_SCALAR = 'scalar';
-    const GQL_ENUM = 'enum';
-    const GQL_TYPE = 'type';
-    const GQL_INPUT = 'input';
-    const GQL_UNION = 'union';
-    const GQL_INTERFACE = 'interface';
-
     /**
      * @see https://facebook.github.io/graphql/draft/#sec-Input-and-Output-Types
      */
-    const VALID_INPUT_TYPES = [self::GQL_SCALAR, self::GQL_ENUM, self::GQL_INPUT];
-    const VALID_OUTPUT_TYPES = [self::GQL_SCALAR, self::GQL_TYPE, self::GQL_INTERFACE, self::GQL_UNION, self::GQL_ENUM];
-
-    const CONFIGURATION_TYPES_MAP = [
-        self::GQL_SCALAR => 'custom-scalar',
-        self::GQL_ENUM => 'enum',
-        self::GQL_TYPE => 'object',
-        self::GQL_INPUT => 'input-object',
-        self::GQL_UNION => 'union',
-        self::GQL_INTERFACE => 'interface',
+    const VALID_INPUT_TYPES = [TypeConfigurationInterface::TYPE_SCALAR, TypeConfigurationInterface::TYPE_ENUM, TypeConfigurationInterface::TYPE_INPUT];
+    const VALID_OUTPUT_TYPES = [
+        TypeConfigurationInterface::TYPE_SCALAR,
+        TypeConfigurationInterface::TYPE_OBJECT,
+        TypeConfigurationInterface::TYPE_INTERFACE,
+        TypeConfigurationInterface::TYPE_UNION,
+        TypeConfigurationInterface::TYPE_ENUM
     ];
 
     protected ClassesTypesMap $classesTypesMap;
@@ -50,7 +44,7 @@ abstract class MetadataConfiguration
 
     abstract public function setClassesMap(ReflectionClass $reflectionClass, Metadata\Metadata $metadata): void;
 
-    abstract public function getConfiguration(ReflectionClass $reflectionClass, Metadata\Metadata $metadata): array;
+    abstract public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $metadata): ?TypeConfigurationInterface;
 
     /**
      * Get the name of the default schema
@@ -72,26 +66,37 @@ abstract class MetadataConfiguration
     }
 
     /**
-     * Get the config for description & deprecation reason.
-     *
-     * @return array<'description'|'deprecationReason',string>
+     * Get the description from array of metadata
      */
-    protected function getDescriptionConfiguration(array $metadatas, bool $withDeprecation = false): array
+    protected function getDescription(array $metadatas): ?string
     {
-        $config = [];
         $descriptionMeta = $this->getFirstMetadataMatching($metadatas, Metadata\Description::class);
-        if (null !== $descriptionMeta) {
-            $config['description'] = $descriptionMeta->value;
+        
+        return $descriptionMeta !== null ? $descriptionMeta->description : null;
+    }
+
+    /**
+     * Get the deprecation from array of metadata
+     */
+    protected function getDeprecation(array $metadatas): ?string
+    {
+        $deprecatedMeta = $this->getFirstMetadataMatching($metadatas, Metadata\Deprecated::class);
+
+        return $deprecatedMeta !== null ? $deprecatedMeta->reason : null;
+    }
+
+    /**
+     * Get the extensions associated to the metadatas
+     */
+    protected function getExtensions(array $metadatas): array
+    {
+        $extensionsMeta = $this->getMetadataMatching($metadatas, Metadata\Extension::class);
+        $extensions = [];
+        foreach ($extensionsMeta as $extensionMeta) {
+            $extensions[] = new ExtensionConfiguration($extensionMeta->name, $extensionMeta->configuration);
         }
 
-        if ($withDeprecation) {
-            $deprecatedMeta = $this->getFirstMetadataMatching($metadatas, Metadata\Deprecated::class);
-            if (null !== $deprecatedMeta) {
-                $config['deprecationReason'] = $deprecatedMeta->value;
-            }
-        }
-
-        return $config;
+        return $extensions;
     }
 
     /**

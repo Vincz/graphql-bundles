@@ -10,6 +10,7 @@ use Attribute;
  * Annotation for GraphQL mutation.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  * @Target({"METHOD"})
  */
 #[Attribute(Attribute::TARGET_METHOD)]

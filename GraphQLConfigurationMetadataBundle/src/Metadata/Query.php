@@ -10,6 +10,7 @@ use Attribute;
  * Annotation for GraphQL query.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  * @Target({"METHOD"})
  */
 #[Attribute(Attribute::TARGET_METHOD)]

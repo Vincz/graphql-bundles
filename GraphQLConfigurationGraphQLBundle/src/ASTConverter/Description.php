@@ -8,11 +8,11 @@ use GraphQL\Language\AST\Node;
 use GraphQL\Language\AST\StringValueNode;
 use function trim;
 
-class DescriptionNode implements NodeInterface
+class Description
 {
-    public static function toConfig(Node $node): array
+    public static function get(Node $node): ?string
     {
-        return ['description' => self::cleanAstDescription($node->description)];
+        return self::cleanAstDescription($node->description);
     }
 
     private static function cleanAstDescription(?StringValueNode $description): ?string

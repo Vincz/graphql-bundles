@@ -5,17 +5,18 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\Relay;
 
 use Attribute;
-use Doctrine\Common\Annotations\NamedArgumentConstructorAnnotation;
+
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\Type;
 
 /**
  * Annotation for GraphQL relay connection.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  * @Target("CLASS")
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class Connection extends Type implements NamedArgumentConstructorAnnotation
+final class Connection extends Type
 {
     /**
      * Connection Edge type.

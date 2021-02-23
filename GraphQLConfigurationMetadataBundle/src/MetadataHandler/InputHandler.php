@@ -2,17 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser;
+namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\Configuration\InputConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuessingException;
+use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
 use ReflectionClass;
 use ReflectionProperty;
 
-class InputConfiguration extends MetadataConfiguration
+class InputHandler extends MetadataHandler
 {
-    const TYPE = self::GQL_INPUT;
+    const TYPE = TypeConfigurationInterface::TYPE_INPUT;
 
     protected function getInputName(ReflectionClass $reflectionClass, Metadata\Metadata $inputMetadata): string
     {
@@ -30,19 +34,24 @@ class InputConfiguration extends MetadataConfiguration
      *
      * @return array{type: 'relay-mutation-input'|'input-object', config: array}
      */
-    public function getConfiguration(ReflectionClass $reflectionClass, Metadata\Metadata $inputMetadata): array
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $inputMetadata): ?TypeConfigurationInterface
     {
         $gqlName = $this->getInputName($reflectionClass, $inputMetadata);
-        $inputConfiguration = array_merge([
-            'fields' => $this->getGraphQLInputFieldsFromMetadatas($reflectionClass, $this->getClassProperties($reflectionClass)),
-        ], $this->getDescriptionConfiguration($this->getMetadatas($reflectionClass)));
+        $metadatas = $this->getMetadatas($reflectionClass);
 
-        return [
-            $gqlName => [
-                'type' => $inputMetadata->isRelay ? 'relay-mutation-input' : self::CONFIGURATION_TYPES_MAP[self::TYPE],
-                'config' => $inputConfiguration,
-            ],
-        ];
+        $inputConfiguration = new InputConfiguration($gqlName);
+        $inputConfiguration->setDescription($this->getDescription($metadatas));
+        $inputConfiguration->setDeprecation($this->getDeprecation($metadatas));
+
+        $fields = $this->getGraphQLInputFieldsFromMetadatas($reflectionClass, $this->getClassProperties($reflectionClass));
+
+        foreach ($fields as $field) {
+            $inputConfiguration->addField($field);
+        }
+
+        $configuration->addType($inputConfiguration);
+
+        return $inputConfiguration;
     }
 
     /**
@@ -52,7 +61,7 @@ class InputConfiguration extends MetadataConfiguration
      *
      * @throws AnnotationException
      *
-     * @return array<string,array>
+     * @return FieldConfiguration[]
      */
     protected function getGraphQLInputFieldsFromMetadatas(ReflectionClass $reflectionClass, array $reflectors): array
     {
@@ -74,7 +83,6 @@ class InputConfiguration extends MetadataConfiguration
                 continue;
             }
 
-            $fieldName = $reflector->getName();
             if (isset($fieldMetadata->type)) {
                 $fieldType = $fieldMetadata->type;
             } else {
@@ -84,7 +92,7 @@ class InputConfiguration extends MetadataConfiguration
                     throw new MetadataConfigurationException(sprintf('The attribute "type" on %s is missing on property "%s" and cannot be auto-guessed from the following type guessers:'."\n%s\n", $this->formatMetadata(Metadata\Field::class), $reflector->getName(), $e->getMessage()));
                 }
             }
-            $fieldConfiguration = [];
+
             if ($fieldType) {
                 // Resolve a PHP class from a GraphQL type
                 $resolvedType = $this->classesTypesMap->getType($fieldType);
@@ -92,12 +100,13 @@ class InputConfiguration extends MetadataConfiguration
                 if (null !== $resolvedType && !in_array($resolvedType['type'], self::VALID_INPUT_TYPES)) {
                     throw new MetadataConfigurationException(sprintf('The type "%s" on "%s" is a "%s" not valid on an Input %s. Only Input, Scalar and Enum are allowed.', $fieldType, $reflector->getName(), $resolvedType['type'], $this->formatMetadata('Field')));
                 }
-
-                $fieldConfiguration['type'] = $fieldType;
             }
 
-            $fieldConfiguration = array_merge($this->getDescriptionConfiguration($metadatas, true), $fieldConfiguration);
-            $fields[$fieldName] = $fieldConfiguration;
+            $fieldConfiguration = new FieldConfiguration($reflector->getName(), $fieldType);
+            $fieldConfiguration->setDescription($this->getDescription($metadatas));
+            $fieldConfiguration->setDeprecation($this->getDeprecation($metadatas));
+
+            $fields[] = $fieldConfiguration;
         }
 
         return $fields;

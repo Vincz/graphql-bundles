@@ -5,31 +5,28 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
+use Overblog\GraphQLBundle\Configuration\EnumConfiguration;
+use Overblog\GraphQLBundle\Configuration\EnumValueConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
 
 class EnumNode implements NodeInterface
 {
-    public static function toConfig(Node $node): array
+    public static function toConfiguration(Node $node): TypeConfigurationInterface
     {
-        $config = DescriptionNode::toConfig($node);
-
-        $values = [];
+        $enumConfiguration = new EnumConfiguration('');
+        $enumConfiguration->setDeprecation(Deprecated::get($node));
+        $enumConfiguration->setDescription(Description::get($node));
+        $enumConfiguration->addExtensions(Extensions::get($node));
 
         foreach ($node->values as $value) {
-            $values[$value->name->value] = DescriptionNode::toConfig($value) + [
-                'value' => $value->name->value,
-            ];
-
-            $directiveConfig = DirectiveNode::toConfig($value);
-
-            if (isset($directiveConfig['deprecationReason'])) {
-                $values[$value->name->value]['deprecationReason'] = $directiveConfig['deprecationReason'];
-            }
+            $valueConfiguration = new EnumValueConfiguration($value->name->value, $value->name->value);
+            $valueConfiguration->setDeprecation(Deprecated::get($value));
+            $valueConfiguration->setDescription(Description::get($value));
+            $valueConfiguration->addExtensions(Extensions::get($value));
+            
+            $enumConfiguration->addValue($valueConfiguration);
         }
-        $config['values'] = $values;
 
-        return [
-            'type' => 'enum',
-            'config' => $config,
-        ];
+        return $enumConfiguration;
     }
 }

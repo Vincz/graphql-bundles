@@ -8,7 +8,7 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
  * @GQL\Type
- * @GQL\FieldsBuilder(builder="MyFieldsBuilder", builderConfig={"param1": "val1"})
+ * @GQL\FieldsBuilder(name="MyFieldsBuilder", configuration={"param1": "val1"})
  */
 class DeprecatedBuilderAttributes
 {

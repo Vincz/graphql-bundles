@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser;
+namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
 use ReflectionClass;
 
-class UnionConfiguration extends MetadataConfiguration
+class UnionHandler extends MetadataHandler
 {
-    const TYPE = self::GQL_UNION;
+    const TYPE = TypeConfigurationInterface::TYPE_UNION;
 
     protected function getUnionName(ReflectionClass $reflectionClass, Metadata\Metadata $unionMetadata): string
     {
@@ -28,12 +31,17 @@ class UnionConfiguration extends MetadataConfiguration
      *
      * @return array{type: 'custom-scalar', config: array}
      */
-    public function getConfiguration(ReflectionClass $reflectionClass, Metadata\Metadata $unionMetadata): array
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $unionMetadata): ?TypeConfigurationInterface
     {
         $gqlName = $this->getUnionName($reflectionClass, $unionMetadata);
-        $unionConfiguration = [];
+        $metadatas = $this->getMetadatas($reflectionClass);
+
+        $unionConfiguration = new UnionConfiguration($gqlName);
+        $unionConfiguration->setDescription($this->getDescription($metadatas));
+        $unionConfiguration->setDeprecation($this->getDeprecation($metadatas));
+
         if (!empty($unionMetadata->types)) {
-            $unionConfiguration['types'] = $unionMetadata->types;
+            $types = $unionMetadata->types;
         } else {
             $types = array_keys($this->classesTypesMap->searchClassesMapBy(function ($gqlType, $configuration) use ($reflectionClass) {
                 $typeClassName = $configuration['class'];
@@ -44,20 +52,18 @@ class UnionConfiguration extends MetadataConfiguration
                 }
 
                 return $typeMetadata->isSubclassOf($reflectionClass->getName());
-            }, self::GQL_TYPE));
+            }, TypeConfigurationInterface::TYPE_OBJECT));
             sort($types);
-            $unionConfiguration['types'] = $types;
         }
+        $unionConfiguration->setTypes($types);
 
-        $unionConfiguration = $this->getDescriptionConfiguration($this->getMetadatas($reflectionClass)) + $unionConfiguration;
-
-        if (isset($unionMetadata->resolveType)) {
-            $unionConfiguration['resolveType'] = $this->formatExpression($unionMetadata->resolveType);
+        if (isset($unionMetadata->typeResolver)) {
+            $typeResolver = $this->formatExpression($unionMetadata->typeResolver);
         } else {
             if ($reflectionClass->hasMethod('resolveType')) {
                 $method = $reflectionClass->getMethod('resolveType');
                 if ($method->isStatic() && $method->isPublic()) {
-                    $unionConfiguration['resolveType'] = $this->formatExpression(sprintf("@=call('%s::%s', [service('overblog_graphql.type_resolver'), value], true)", $this->formatNamespaceForExpression($reflectionClass->getName()), 'resolveType'));
+                    $typeResolver = $this->formatExpression(sprintf("@=call('%s::%s', [service('overblog_graphql.type_resolver'), value], true)", $this->formatNamespaceForExpression($reflectionClass->getName()), 'resolveType'));
                 } else {
                     throw new MetadataConfigurationException(sprintf('The "resolveType()" method on class must be static and public. Or you must define a "resolveType" attribute on the %s metadata.', $this->formatMetadata('Union')));
                 }
@@ -65,12 +71,10 @@ class UnionConfiguration extends MetadataConfiguration
                 throw new MetadataConfigurationException(sprintf('The metadata %s has no "resolveType" attribute and the related class has no "resolveType()" public static method. You need to define one of them.', $this->formatMetadata('Union')));
             }
         }
+        $unionConfiguration->setTypeResolver($typeResolver);
 
-        return [
-            $gqlName => [
-                'type' => self::CONFIGURATION_TYPES_MAP[self::TYPE],
-                'config' => $unionConfiguration,
-            ],
-        ];
+        $configuration->addType($unionConfiguration);
+
+        return $unionConfiguration;
     }
 }

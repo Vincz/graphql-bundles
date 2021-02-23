@@ -7,10 +7,10 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Typ
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
- * @GQL\TypeInterface(resolveType="@=resolver('character_type', [value])")
+ * @GQL\TypeInterface(typeResolver="@=resolver('character_type', [value])")
  * @GQL\Description("The character interface")
  */
-#[GQL\TypeInterface(resolveType: "@=resolver('character_type', [value])")]
+#[GQL\TypeInterface(typeResolver: "@=resolver('character_type', [value])")]
 #[GQL\Description("The character interface")]
 abstract class Character
 {

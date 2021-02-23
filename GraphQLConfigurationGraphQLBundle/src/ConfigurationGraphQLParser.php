@@ -11,7 +11,8 @@ use GraphQL\Language\AST\InputObjectTypeDefinitionNode;
 use GraphQL\Language\AST\NodeKind;
 use GraphQL\Language\AST\ObjectTypeDefinitionNode;
 use GraphQL\Language\Parser;
-use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\ConfigurationProvider\ConfigurationFilesParser;
 use SplFileInfo;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use function array_keys;
@@ -28,6 +29,8 @@ use function ucfirst;
 
 class ConfigurationGraphQLParser extends ConfigurationFilesParser
 {
+    protected Configuration $configuration;
+
     private const DEFINITION_TYPE_MAPPING = [
         NodeKind::OBJECT_TYPE_DEFINITION => 'object',
         NodeKind::INTERFACE_TYPE_DEFINITION => 'interface',
@@ -37,9 +40,26 @@ class ConfigurationGraphQLParser extends ConfigurationFilesParser
         NodeKind::SCALAR_TYPE_DEFINITION => 'customScalar',
     ];
 
+    public function __construct(array $directories)
+    {
+        parent::__construct($directories);
+        $this->configuration = new Configuration();
+    }
+
     public function getSupportedExtensions(): array
     {
         return ['graphql', 'graphqls'];
+    }
+
+    public function getConfiguration(): Configuration
+    {
+        $files = $this->getFiles();
+        $config = [];
+        foreach ($files as $file) {
+            $this->parseFile($file);
+        }
+        
+        return $this->configuration;
     }
 
     protected function parseFile(SplFileInfo $file): array
@@ -63,7 +83,9 @@ class ConfigurationGraphQLParser extends ConfigurationFilesParser
              */
             if (isset($typeDef->kind) && in_array($typeDef->kind, array_keys(self::DEFINITION_TYPE_MAPPING))) {
                 $class = sprintf('\\%s\\ASTConverter\\%sNode', __NAMESPACE__, ucfirst(self::DEFINITION_TYPE_MAPPING[$typeDef->kind]));
-                $typesConfig[$typeDef->name->value] = call_user_func([$class, 'toConfig'], $typeDef);
+                $typeConfiguration = call_user_func([$class, 'toConfiguration'], $typeDef);
+                $typeConfiguration->setName($typeDef->name->value);
+                $this->configuration->addType($typeConfiguration);
             } else {
                 self::throwUnsupportedDefinitionNode($typeDef);
             }

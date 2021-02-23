@@ -8,10 +8,10 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
  * @GQL\Type
- * @GQL\FieldsBuilder(name="MyFieldsBuilder", config={"param1": "val1"})
+ * @GQL\FieldsBuilder(name="MyFieldsBuilder", configuration={"param1": "val1"})
  */
 #[GQL\Type]
-#[GQL\FieldsBuilder(name: "MyFieldsBuilder", config: ["param1" => "val1"])]
+#[GQL\FieldsBuilder(name: "MyFieldsBuilder", configuration: ["param1" => "val1"])]
 class Crystal
 {
     /**

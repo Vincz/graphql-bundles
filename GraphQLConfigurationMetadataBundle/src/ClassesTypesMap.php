@@ -10,7 +10,7 @@ class ClassesTypesMap
 {
     const CACHE_KEY = 'overblog_graphql.classes_types_map';
     protected ?CacheInterface $cache;
-    
+
     /**
      * @var array<string, array{class: string, type: string}>
      */

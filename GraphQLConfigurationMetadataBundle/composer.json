@@ -20,7 +20,7 @@
         "phpstan/phpstan-phpunit": "^0.12.11",
         "phpstan/phpstan-symfony": "^0.12.6",
         "symfony/phpunit-bridge": "^4.4 || ^5.0",
-        "doctrine/annotations": "^1.11",
+        "doctrine/annotations": "^1.12",
         "doctrine/cache": "^1.10",
         "doctrine/orm": "^2.8",
         "symfony/validator": "^5.2"

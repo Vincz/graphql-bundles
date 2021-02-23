@@ -5,23 +5,25 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
+use Overblog\GraphQLBundle\Configuration\ScalarConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
 use RuntimeException;
 
 class CustomScalarNode implements NodeInterface
 {
-    public static function toConfig(Node $node): array
+    public static function toConfiguration(Node $node): TypeConfigurationInterface
     {
-        $mustOverride = [__CLASS__, 'mustOverrideConfig'];
-        $config = DescriptionNode::toConfig($node) + [
-            'serialize' => $mustOverride,
-            'parseValue' => $mustOverride,
-            'parseLiteral' => $mustOverride,
-        ];
+        $scalarConfiguration = new ScalarConfiguration('');
+        $scalarConfiguration->setDeprecation(Deprecated::get($node));
+        $scalarConfiguration->setDescription(Description::get($node));
+        $scalarConfiguration->addExtensions(Extensions::get($node));
+        $mustOverride = sprintf('%s::%s', __CLASS__, 'mustOverrideConfig');
+        ;
+        $scalarConfiguration->setSerialize($mustOverride);
+        $scalarConfiguration->setParseValue($mustOverride);
+        $scalarConfiguration->setParseLiteral($mustOverride);
 
-        return [
-            'type' => 'custom-scalar',
-            'config' => $config,
-        ];
+        return $scalarConfiguration;
     }
 
     public static function mustOverrideConfig(): void

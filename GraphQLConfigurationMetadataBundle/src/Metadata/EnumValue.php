@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
-use Doctrine\Common\Annotations\NamedArgumentConstructorAnnotation;
+
 
 /**
  * Annotation for GraphQL enum value.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  * @Target({"ANNOTATION", "CLASS"})
  */
-final class EnumValue extends Metadata implements NamedArgumentConstructorAnnotation
+final class EnumValue extends Metadata
 {
     /**
      * @var string

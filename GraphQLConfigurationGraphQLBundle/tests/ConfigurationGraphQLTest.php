@@ -11,6 +11,9 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use function sprintf;
 use const DIRECTORY_SEPARATOR;
+use SplFileInfo;
+
+use Symfony\Component\Finder\Finder;
 
 class ConfigurationGraphQLTest extends WebTestCase
 {
@@ -27,6 +30,22 @@ class ConfigurationGraphQLTest extends WebTestCase
         });
     }
 
+    public function setUp(): void
+    {
+        parent::setup();
+        $this->configuration = unserialize(serialize($this->getConfiguration()));
+        dump($this->configuration);
+        exit(1);
+    }
+
+    protected function getConfiguration(array $includeDirectories = [])
+    {
+        $directories = [ __DIR__.'/fixtures/schema'];
+        $generator = new ConfigurationGraphQLParser($directories);
+        
+        return $generator->getConfiguration();
+    }
+
     protected function parseFile(string $dirname)
     {
         $parser = new ConfigurationGraphQLParser([$dirname]);
@@ -36,9 +55,10 @@ class ConfigurationGraphQLTest extends WebTestCase
 
     public function testParse(): void
     {
-        $dirname = __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'schema';
-        $expected = include __DIR__.'/fixtures/schema.php';
-        $config = $this->parseFile($dirname);
+        //$dirname = __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'schema';
+        //$expected = include __DIR__.'/fixtures/schema.php';
+        //$config = $this->parseFile($dirname);
+
         $this->assertSame($expected, self::cleanConfig($config));
     }
 

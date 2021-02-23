@@ -11,6 +11,6 @@ class ConfigurationAnnotationTest extends ConfigurationMetadataTest
 {
     public function getMetadataReader():MetadataReaderInterface
     {
-        return new AnnotationReader();
+        return new AnnotationReader(null, false);
     }
 }

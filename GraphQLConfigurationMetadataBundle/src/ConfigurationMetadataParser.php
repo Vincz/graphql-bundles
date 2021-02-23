@@ -5,16 +5,15 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle;
 
 use Doctrine\Common\Annotations\Reader;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\MetadataConfiguration;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\MetadataHandler;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
-use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\ConfigurationProvider\ConfigurationFilesParser;
 use ReflectionClass;
 use Reflector;
+use RuntimeException;
 use SplFileInfo;
 use function sprintf;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
 
 class ConfigurationMetadataParser extends ConfigurationFilesParser
 {
@@ -22,13 +21,15 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
     protected MetadataReaderInterface $metadataReader;
     protected ClassesTypesMap $classesTypesMap;
 
+    protected Configuration $configuration;
+
     protected array $providers = [];
     protected array $resolvers = [];
 
     public function __construct(MetadataReaderInterface $metadataReader, ClassesTypesMap $classesTypesMap, iterable $resolvers, array $directories = [])
     {
         parent::__construct($directories);
-
+        $this->configuration = new Configuration();
         $this->metadataReader = $metadataReader;
         $this->classesTypesMap = $classesTypesMap;
 
@@ -40,38 +41,37 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
         return ['php'];
     }
 
-    public function getConfiguration(): array
+    public function getConfiguration(): Configuration
     {
-        $configuration = [];
-        $files = $this->getFiles($this->getDirectories(), $this->getSupportedExtensions());
+        $files = $this->getFiles();
 
         foreach ($files as $file) {
             $this->parseFileClassMap($file);
         }
 
         foreach ($files as $file) {
-            $configuration = $configuration + $this->parseFile($file);
+            $this->parseFile($file);
         }
 
         $this->classesTypesMap->cache();
-        return $configuration;
+
+        return $this->configuration;
     }
 
-    protected function parseFileClassMap(SplFileInfo $file)
+    protected function parseFileClassMap(SplFileInfo $file):void
     {
-        return $this->processFile($file, true);
+        $this->processFile($file, true);
     }
 
-    protected function parseFile(SplFileInfo $file): array
+    protected function parseFile(SplFileInfo $file):void
     {
-        return $this->processFile($file);
+        $this->processFile($file);
     }
 
-    protected function processFile(SplFileInfo $file, bool $initializeClassesTypesMap = false): ?array
+    protected function processFile(SplFileInfo $file, bool $initializeClassesTypesMap = false): void
     {
         try {
             $reflectionClass = $this->getFileClassReflection($file);
-            $gqlTypes = [];
 
             foreach ($this->getMetadatas($reflectionClass) as $classMetadata) {
                 if ($classMetadata instanceof Metadata\Metadata) {
@@ -80,19 +80,17 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
                         if ($initializeClassesTypesMap) {
                             $resolver->setClassesMap($reflectionClass, $classMetadata, $this->classesTypesMap);
                         } else {
-                            $gqlTypes = array_merge($gqlTypes, $resolver->getConfiguration($reflectionClass, $classMetadata));
+                            $resolver->addConfiguration($this->configuration, $reflectionClass, $classMetadata);
                         }
                     }
                 }
             }
-
-            return $initializeClassesTypesMap ? null : $gqlTypes;
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             throw new MetadataConfigurationException(sprintf('Failed to parse GraphQL metadata from file "%s".', $file), $e->getCode(), $e);
         }
     }
 
-    protected function getResolver(Metadata\Metadata $classMetadata): ?MetadataConfiguration
+    protected function getResolver(Metadata\Metadata $classMetadata): ?MetadataHandler
     {
         foreach ($this->resolvers as $metadataClass => $resolver) {
             if ($classMetadata instanceof $metadataClass) {
@@ -112,7 +110,7 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
             }
 
             return new ReflectionClass($className);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             throw new MetadataConfigurationException(sprintf('Failed to parse GraphQL metadata from file "%s".', $file), $e->getCode(), $e);
         }
     }

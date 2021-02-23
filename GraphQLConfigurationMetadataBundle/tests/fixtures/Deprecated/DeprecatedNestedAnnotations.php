@@ -7,7 +7,7 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Dep
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
- * @GQL\Type(builders={@GQL\FieldsBuilder(name="MyFieldsBuilder", config={"param1": "val1"})})
+ * @GQL\Type(builders={@GQL\FieldsBuilder(name="MyFieldsBuilder", configuration={"param1": "val1"})})
  */
 class DeprecatedNestedAnnotations
 {

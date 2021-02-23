@@ -7,11 +7,13 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Typ
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
- * @GQL\TypeInterface(name="WithArmor", resolveType="@=resolver('character_type', [value])")
+ * @GQL\TypeInterface(name="WithArmor", typeResolver="@=resolver('character_type', [value])")
  * @GQL\Description("The armored interface")
+ * @GQL\Extension("CustomExtension", {"config"=12})
  */
-#[GQL\TypeInterface("WithArmor", resolveType: "@=resolver('character_type', [value])")]
+#[GQL\TypeInterface("WithArmor", typeResolver: "@=resolver('character_type', [value])")]
 #[GQL\Description("The armored interface")]
+#[GQL\EXtension('CustomExtension', ['config1' => 12])]
 interface Armored
 {
 }

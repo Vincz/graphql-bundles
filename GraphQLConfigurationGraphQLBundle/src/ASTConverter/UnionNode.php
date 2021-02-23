@@ -5,24 +5,27 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
+use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
 
 class UnionNode implements NodeInterface
 {
-    public static function toConfig(Node $node): array
+    public static function toConfiguration(Node $node): TypeConfigurationInterface
     {
-        $config = DescriptionNode::toConfig($node);
+        $unionConfiguration = new UnionConfiguration('');
+        $unionConfiguration->setDeprecation(Deprecated::get($node));
+        $unionConfiguration->setDescription(Description::get($node));
+        $unionConfiguration->addExtensions(Extensions::get($node));
+
 
         if (!empty($node->types)) {
             $types = [];
             foreach ($node->types as $type) {
-                $types[] = TypeNode::astTypeNodeToString($type);
+                $types[] = Type::get($type);
             }
-            $config['types'] = $types;
+            $unionConfiguration->setTypes($types);
         }
 
-        return [
-            'type' => 'union',
-            'config' => $config,
-        ];
+        return $unionConfiguration;
     }
 }

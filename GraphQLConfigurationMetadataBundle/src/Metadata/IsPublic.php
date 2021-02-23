@@ -5,24 +5,21 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
-use Doctrine\Common\Annotations\NamedArgumentConstructorAnnotation;
+use Overblog\GraphQLBundle\Extension\PublicExtension;
 
 /**
  * Annotation for GraphQL public on fields.
  *
  * @Annotation
+ * @NamedArgumentConstructor
  * @Target({"CLASS", "METHOD", "PROPERTY"})
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::TARGET_PROPERTY)]
-final class IsPublic extends Metadata implements NamedArgumentConstructorAnnotation
+final class IsPublic extends Extension
 {
-    /**
-     * Field publicity.
-     */
-    public string $value;
-
-    public function __construct(string $value)
+    public function __construct(string $expression)
     {
-        $this->value = $value;
+        $this->name = PublicExtension::NAME;
+        $this->configuration = $expression;
     }
 }

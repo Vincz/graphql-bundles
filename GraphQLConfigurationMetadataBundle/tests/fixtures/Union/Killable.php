@@ -7,9 +7,9 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Uni
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 
 /**
- * @GQL\Union(resolveType="value.getType()")
+ * @GQL\Union(typeResolver="value.getType()")
  */
-#[GQL\Union(resolveType: "value.getType()")]
+#[GQL\Union(typeResolver: "value.getType()")]
 interface Killable
 {
 }

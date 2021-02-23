@@ -8,21 +8,29 @@ use ArrayIterator;
 use Exception;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ConfigurationMetadataParser;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\EnumConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\InputConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\InterfaceConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\ScalarConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\TypeConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\UnionConfiguration;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\RelayEdgeConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataParser\RelayConnectionConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\EnumHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\InputHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\InterfaceHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\ObjectHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\RelayConnectionHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\RelayEdgeHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\ScalarHandler;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler\UnionHandler;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\DocBlockTypeGuesserExtension;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\DoctrineTypeGuesserExtension;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\Extension\TypeHintTypeGuesserExtension;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuesser;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\Configuration\EnumConfiguration;
+use Overblog\GraphQLBundle\Configuration\InputConfiguration;
+use Overblog\GraphQLBundle\Configuration\InterfaceConfiguration;
+use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
+use Overblog\GraphQLBundle\Configuration\ScalarConfiguration;
+use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
+use Overblog\GraphQLBundle\Extension\BuilderExtension;
 use SplFileInfo;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -32,26 +40,13 @@ use function sprintf;
 
 abstract class ConfigurationMetadataTest extends WebTestCase
 {
-    protected array $config = [];
+    protected Configuration $configuration;
     protected TypeGuesser $typeGuesser;
     protected ConfigurationMetadataParser $configurationParser;
     protected ClassesTypesMap $classesTypesMap;
     protected array $excludeDirectories = ['Invalid', 'Deprecated'];
 
     abstract protected function getMetadataReader(): MetadataReaderInterface;
-
-    protected static function cleanConfig(array $config): array
-    {
-        foreach ($config as $key => &$value) {
-            if (is_array($value)) {
-                $value = self::cleanConfig($value);
-            }
-        }
-
-        return array_filter($config, function ($item) {
-            return !is_array($item) || !empty($item);
-        });
-    }
 
     protected array $schemas = [
         'default' => ['query' => 'RootQuery', 'mutation' => 'RootMutation'],
@@ -71,7 +66,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
     public function setUp(): void
     {
         parent::setup();
-        $this->config = self::cleanConfig($this->getConfiguration());
+        $this->configuration = unserialize(serialize($this->getConfiguration()));
     }
 
     protected function getConfiguration(array $includeDirectories = [])
@@ -90,17 +85,17 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             $this->typeGuesser,
             $this->schemas
         ];
-        $typeResolver = new TypeConfiguration(...$resolverArgs);
+        $objectHandler = new ObjectHandler(...$resolverArgs);
         $resolvers = new ArrayIterator([
-            Metadata\Provider::class => $typeResolver,
-            Metadata\Relay\Edge::class => new RelayEdgeConfiguration(...$resolverArgs),
-            Metadata\Relay\Connection::class => new RelayConnectionConfiguration(...$resolverArgs),
-            Metadata\Type::class => $typeResolver,
-            Metadata\Input::class => new InputConfiguration(...$resolverArgs),
-            Metadata\Scalar::class => new ScalarConfiguration(...$resolverArgs),
-            Metadata\Enum::class => new EnumConfiguration(...$resolverArgs),
-            Metadata\Union::class => new UnionConfiguration(...$resolverArgs),
-            Metadata\TypeInterface::class => new InterfaceConfiguration(...$resolverArgs),
+            Metadata\Provider::class => $objectHandler,
+            Metadata\Relay\Edge::class => new RelayEdgeHandler(...$resolverArgs),
+            Metadata\Relay\Connection::class => new RelayConnectionHandler(...$resolverArgs),
+            Metadata\Type::class => $objectHandler,
+            Metadata\Input::class => new InputHandler(...$resolverArgs),
+            Metadata\Scalar::class => new ScalarHandler(...$resolverArgs),
+            Metadata\Enum::class => new EnumHandler(...$resolverArgs),
+            Metadata\Union::class => new UnionHandler(...$resolverArgs),
+            Metadata\TypeInterface::class => new InterfaceHandler(...$resolverArgs),
         ]);
 
         // Exclude Deprecated & Invalid directories from the test directories
@@ -129,412 +124,584 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals($expected, $this->config[$name]);
     }
 
-    public function testTypes(): void
+    protected function getType(string $name, string $configurationClass = null)
     {
-        // Test an interface
-        $this->expect('Character', 'interface', [
+        $type = $this->configuration->getType($name);
+        if (!$type) {
+            $this->fail(sprintf('Unable to retrieve type "%s" from configuration', $name));
+        }
+        $this->assertNotNull($type);
+        if ($configurationClass) {
+            $this->assertInstanceOf($configurationClass, $type);
+        }
+
+        return $type;
+    }
+
+    public function testTypeInterface(): void
+    {
+        $interface = $this->getType('Character', InterfaceConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Character',
             'description' => 'The character interface',
-            'resolveType' => "@=resolver('character_type', [value])",
+            'typeResolver' => "@=resolver('character_type', [value])",
             'fields' => [
-                'name' => ['type' => 'String!', 'description' => 'The name of the character'],
-                'friends' => ['type' => '[Character]', 'description' => 'The friends of the character', 'resolve' => "@=resolver('App\\MyResolver::getFriends')"],
-            ],
-        ]);
+                [
+                    'name' => 'name',
+                    'type' => 'String!',
+                    'description' => 'The name of the character',
+                ],
+                [
+                    'name' => 'friends',
+                    'type' => '[Character]',
+                    'description' => 'The friends of the character',
+                    'resolver' => "@=resolver('App\\MyResolver::getFriends')"
+                ],
+            ]
+        ], $interface->toArray());
+    }
 
-        // Test a type extending an interface
-        $this->expect('Hero', 'object', [
-            'description' => 'The Hero type',
+    public function testTypeObjectWithInterface(): void
+    {
+        $object = $this->getType('Hero', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Hero',
             'interfaces' => ['Character'],
+            'description' => 'The Hero type',
             'fields' => [
-                'name' => ['type' => 'String!', 'description' => 'The name of the character'],
-                'friends' => ['type' => '[Character]', 'description' => 'The friends of the character', 'resolve' => "@=resolver('App\\MyResolver::getFriends')"],
-                'race' => ['type' => 'Race'],
+                [
+                    'name' => 'race',
+                    'type' => 'Race'
+                ],
+                [
+                    'name' => 'name',
+                    'type' => 'String!',
+                    'description' => 'The name of the character'
+                ],
+                [
+                    'name' => 'friends',
+                    'type' => '[Character]',
+                    'description' => 'The friends of the character',
+                    'resolver' => "@=resolver('App\\MyResolver::getFriends')"
+                ],
             ],
-        ]);
+        ], $object->toArray());
+    }
 
-        $this->expect('Droid', 'object', [
+    public function testTypeObjectWithProviderFields():void
+    {
+        $object = $this->getType('Droid', ObjectConfiguration::class);
+        
+        $this->assertEquals([
+            'name' => 'Droid',
             'description' => 'The Droid type',
             'interfaces' => ['Character'],
             'isTypeOf' => "@=isTypeOf('App\Entity\Droid')",
             'fields' => [
-                'name' => ['type' => 'String!', 'description' => 'The name of the character'],
-                'friends' => ['type' => '[Character]', 'description' => 'The friends of the character', 'resolve' => "@=resolver('App\\MyResolver::getFriends')"],
-                'memory' => ['type' => 'Int!'],
-                'planet_allowedPlanets' => [
+                ['name' => 'memory', 'type' => 'Int!'],
+                ['name' => 'name', 'type' => 'String!', 'description' => 'The name of the character'],
+                ['name' => 'friends', 'type' => '[Character]', 'description' => 'The friends of the character', 'resolver' => "@=resolver('App\\MyResolver::getFriends')"],
+                [
+                    'name' => 'planet_allowedPlanets',
                     'type' => '[Planet]',
-                    'resolve' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getAllowedPlanetsForDroids, arguments({}, args))',
-                    'access' => '@=override_access',
-                    'public' => '@=default_public',
+                    'resolver' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getAllowedPlanetsForDroids, arguments({}, args))',
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'override_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
-                'planet_armorResistance' => [
+                [
+                    'name' => 'planet_armorResistance',
                     'type' => 'Int!',
-                    'resolve' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getArmorResistance, arguments({}, args))',
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'resolver' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getArmorResistance, arguments({}, args))',
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
             ],
-        ]);
+        ], $object->toArray());
+    }
 
-        // Test a type with public/access on fields, methods as field
-        $this->expect('Sith', 'object', [
+    public function testTypeObjectWithFieldsMethod(): void
+    {
+        $object = $this->getType('Sith', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Sith',
             'description' => 'The Sith type',
             'interfaces' => ['Character'],
-            'resolveField' => '@=value',
-            'fieldsDefaultPublic' => '@=isAuthenticated()',
-            'fieldsDefaultAccess' => '@=isAuthenticated()',
+            'fieldsResolver' => '@=value',
             'fields' => [
-                'name' => ['type' => 'String!', 'description' => 'The name of the character'],
-                'friends' => ['type' => '[Character]', 'description' => 'The friends of the character', 'resolve' => "@=resolver('App\\MyResolver::getFriends')"],
-                'realName' => ['type' => 'String!', 'access' => "@=hasRole('SITH_LORD')"],
-                'location' => ['type' => 'String!', 'public' => "@=hasRole('SITH_LORD')"],
-                'currentMaster' => ['type' => 'Sith', 'resolve' => "@=service('master_resolver').getMaster(value)"],
-                'victims' => [
+                ['name' => 'realName','type' => 'String!', 'extensions' => [['name' => 'access', 'configuration' => "hasRole('SITH_LORD')"]]],
+                ['name' => 'location','type' => 'String!',  'extensions' => [['name' => 'public', 'configuration' => "hasRole('SITH_LORD')"]]],
+                ['name' => 'currentMaster','type' => 'Sith', 'resolver' => "@=service('master_resolver').getMaster(value)"],
+
+                ['name' => 'name', 'type' => 'String!', 'description' => 'The name of the character'],
+                ['name' => 'friends', 'type' => '[Character]', 'description' => 'The friends of the character', 'resolver' => "@=resolver('App\\MyResolver::getFriends')"],
+                
+                
+                [
+                    'name' => 'victims',
                     'type' => '[Character]',
-                    'args' => ['jediOnly' => ['type' => 'Boolean', 'description' => 'Only Jedi victims', 'defaultValue' => false]],
-                    'resolve' => '@=call(value.getVictims, arguments({jediOnly: "Boolean"}, args))',
+                    'arguments' => [
+                        ['name' => 'jediOnly', 'type' => 'Boolean', 'description' => 'Only Jedi victims', 'defaultValue' => false]
+                    ],
+                    'resolver' => '@=call(value.getVictims, arguments({jediOnly: "Boolean"}, args))',
                 ],
             ],
-        ]);
-
-        // Test a type with a field builder
-        $this->expect('Planet', 'object', [
+            'extensions' => [
+                ['name' => 'access', 'configuration' => 'isAuthenticated()'],
+                ['name' => 'public', 'configuration' => 'isAuthenticated()'],
+            ]
+        ], $object->toArray());
+    }
+    
+    public function testTypeObjectWithFieldBuilder(): void
+    {
+        $object = $this->getType('Planet', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Planet',
             'description' => 'The Planet type',
             'fields' => [
-                'name' => ['type' => 'String!'],
-                'location' => ['type' => 'GalaxyCoordinates'],
-                'population' => ['type' => 'Int!'],
-                'notes' => [
-                    'builder' => 'NoteFieldBuilder',
-                    'builderConfig' => ['option1' => 'value1'],
+                ['name' => 'name', 'type' => 'String!'],
+                ['name' => 'location', 'type' => 'GalaxyCoordinates'],
+                ['name' => 'population', 'type' => 'Int!'],
+                [
+                    'name' => 'notes',
+                    'extensions' => [
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]]
+                    ]
                 ],
-                'closestPlanet' => [
+                [
+                    'name' => 'closestPlanet',
                     'type' => 'Planet',
-                    'argsBuilder' => [
-                        'builder' => 'PlanetFilterArgBuilder',
-                        'config' => ['option2' => 'value2'],
+                    'resolver' => "@=resolver('closest_planet', [args['filter']])",
+                    'extensions' => [
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]]
                     ],
-                    'resolve' => "@=resolver('closest_planet', [args['filter']])",
                 ],
-                'notesDeprecated' => [
-                    'builder' => 'NoteFieldBuilder',
-                    'builderConfig' => ['option1' => 'value1'],
+                [
+                    'name' => 'notesDeprecated',
+                    'extensions' => [
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]]
+                    ]
                 ],
-                'closestPlanetDeprecated' => [
+                [
+                    'name' => 'closestPlanetDeprecated',
                     'type' => 'Planet',
-                    'argsBuilder' => [
-                        'builder' => 'PlanetFilterArgBuilder',
-                        'config' => ['option2' => 'value2'],
+                    'resolver' => "@=resolver('closest_planet', [args['filter']])",
+                    'extensions' => [
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]]
                     ],
-                    'resolve' => "@=resolver('closest_planet', [args['filter']])",
+                    
                 ],
             ],
-        ]);
+        ], $object->toArray());
+    }
 
-        // Test a type with a fields builder
-        $this->expect('Crystal', 'object', [
+    public function testTypeObjectWithFieldsBuilder(): void
+    {
+        $object = $this->getType('Crystal', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Crystal',
             'fields' => [
-                'color' => ['type' => 'String!'],
+                ['name' => 'color', 'type' => 'String!'],
             ],
-            'builders' => [['builder' => 'MyFieldsBuilder', 'builderConfig' => ['param1' => 'val1']]],
-        ]);
+            'extensions' => [
+                [
+                    'name' => BuilderExtension::NAME,
+                    'configuration' => [
+                        'type' => BuilderExtension::TYPE_FIELDS,
+                        'name' => 'MyFieldsBuilder',
+                        'configuration' => ['param1' => 'val1']
+                    ]
+                ]
+            ]
+        ], $object->toArray());
+    }
 
-        // Test a type extending another type
-        $this->expect('Cat', 'object', [
+    public function testTypeObjectExtendingTypeObject(): void
+    {
+        $object = $this->getType('Cat', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Cat',
             'description' => 'The Cat type',
             'fields' => [
-                'name' => ['type' => 'String!', 'description' => 'The name of the animal'],
-                'lives' => ['type' => 'Int!'],
-                'toys' => ['type' => '[String!]!'],
+                ['name' => 'lives', 'type' => 'Int!'],
+                ['name' => 'toys', 'type' => '[String!]!'],
+                ['name' => 'name', 'type' => 'String!', 'description' => 'The name of the animal'],
             ],
-        ]);
+        ], $object->toArray());
     }
+
 
     public function testInput(): void
     {
-        $this->expect('PlanetInput', 'input-object', [
+        $input = $this->getType('PlanetInput', InputConfiguration::class);
+
+        $this->assertEquals([
+            'name' => 'PlanetInput',
             'description' => 'Planet Input type description',
             'fields' => [
-                'name' => ['type' => 'String!'],
-                'population' => ['type' => 'Int!'],
-                'description' => ['type' => 'String!'],
-                'diameter' => ['type' => 'Int'],
-                'variable' => ['type' => 'Int!'],
-                'tags' => ['type' => '[String]!'],
+                ['name' => 'name', 'type' => 'String!'],
+                ['name' => 'population', 'type' => 'Int!'],
+                ['name' => 'description', 'type' => 'String!'],
+                ['name' => 'diameter', 'type' => 'Int'],
+                ['name' => 'variable', 'type' => 'Int!'],
+                ['name' => 'tags', 'type' => '[String]!'],
             ],
-        ]);
+        ], $input->toArray());
     }
 
     public function testInterfaces(): void
     {
-        $this->expect('WithArmor', 'interface', [
+        $interface = $this->getType('WithArmor', InterfaceConfiguration::class);
+        $this->assertEquals([
+            'name' => 'WithArmor',
             'description' => 'The armored interface',
-            'resolveType' => '@=resolver(\'character_type\', [value])',
-        ]);
+            'typeResolver' => '@=resolver(\'character_type\', [value])',
+        ], $interface->toArray());
     }
 
     public function testEnum(): void
     {
-        $this->expect('Race', 'enum', [
+        $interface = $this->getType('Race', EnumConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Race',
             'description' => 'The list of races!',
             'values' => [
-                'HUMAIN' => ['value' => 1],
-                'CHISS' => ['value' => '2', 'description' => 'The Chiss race'],
-                'ZABRAK' => ['value' => '3', 'deprecationReason' => 'The Zabraks have been wiped out'],
-                'TWILEK' => ['value' => '4'],
+                ['name' => 'HUMAIN', 'value' => 1],
+                ['name' => 'CHISS', 'value' => '2', 'description' => 'The Chiss race'],
+                ['name' => 'ZABRAK', 'value' => '3', 'deprecation' => 'The Zabraks have been wiped out'],
+                ['name' => 'TWILEK', 'value' => '4'],
             ],
-        ]);
+        ], $interface->toArray());
     }
 
+    
     public function testUnion(): void
     {
-        $this->expect('ResultSearch', 'union', [
+        $union = $this->getType('ResultSearch', UnionConfiguration::class);
+        $this->assertEquals([
+            'name' => 'ResultSearch',
             'description' => 'A search result',
             'types' => ['Hero', 'Droid', 'Sith'],
-            'resolveType' => '@=value.getType()',
-        ]);
-
-        $this->expect('SearchResult2', 'union', [
+            'typeResolver' => '@=value.getType()',
+        ], $union->toArray());
+        
+        $union = $this->getType('SearchResult2', UnionConfiguration::class);
+        $this->assertEquals([
+            'name' => 'SearchResult2',
             'types' => ['Hero', 'Droid', 'Sith'],
-            'resolveType' => "@=call('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Union\\\\SearchResult2::resolveType', [service('overblog_graphql.type_resolver'), value], true)",
-        ]);
+            'typeResolver' => "@=call('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Union\\\\SearchResult2::resolveType', [service('overblog_graphql.type_resolver'), value], true)",
+        ], $union->toArray());
     }
 
     public function testUnionAutoguessed(): void
     {
-        $this->expect('Killable', 'union', [
+        $union = $this->getType('Killable', UnionConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Killable',
             'types' => ['Hero', 'Mandalorian',  'Sith'],
-            'resolveType' => '@=value.getType()',
-        ]);
+            'typeResolver' => '@=value.getType()'
+        ], $union->toArray());
     }
 
+    
     public function testInterfaceAutoguessed(): void
     {
-        $this->expect('Mandalorian', 'object', [
+        $interface = $this->getType('Mandalorian', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Mandalorian',
             'interfaces' => ['Character', 'WithArmor'],
             'fields' => [
-                'name' => ['type' => 'String!', 'description' => 'The name of the character'],
-                'friends' => ['type' => '[Character]', 'description' => 'The friends of the character', 'resolve' => "@=resolver('App\\MyResolver::getFriends')"],
-                'planet_armorResistance' => [
+                ['name' => 'name', 'type' => 'String!', 'description' => 'The name of the character'],
+                ['name' => 'friends', 'type' => '[Character]', 'description' => 'The friends of the character', 'resolver' => "@=resolver('App\\MyResolver::getFriends')"],
+                [
+                    'name' => 'planet_armorResistance',
                     'type' => 'Int!',
-                    'resolve' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getArmorResistance, arguments({}, args))',
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'resolver' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getArmorResistance, arguments({}, args))',
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
             ],
-        ]);
+        ], $interface->toArray());
     }
 
     public function testScalar(): void
     {
-        $this->expect('GalaxyCoordinates', 'custom-scalar', [
-            'serialize' => ['Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Scalar\GalaxyCoordinates', 'serialize'],
-            'parseValue' => ['Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Scalar\GalaxyCoordinates', 'parseValue'],
-            'parseLiteral' => ['Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Scalar\GalaxyCoordinates', 'parseLiteral'],
+        $scalar = $this->getType('GalaxyCoordinates', ScalarConfiguration::class);
+        $this->assertEquals([
+            'name' => 'GalaxyCoordinates',
+            'serialize' => 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Scalar\GalaxyCoordinates::serialize',
+            'parseValue' => 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Scalar\GalaxyCoordinates::parseValue',
+            'parseLiteral' => 'Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Tests\fixtures\Scalar\GalaxyCoordinates::parseLiteral',
             'description' => 'The galaxy coordinates scalar',
-        ]);
+        ], $scalar->toArray());
 
-        $this->expect('MyScalar', 'custom-scalar', [
+        $scalar = $this->getType('MyScalar', ScalarConfiguration::class);
+        $this->assertEquals([
+            'name' => 'MyScalar',
             'scalarType' => '@=newObject(\'App\Type\EmailType\')'
-        ]);
+        ], $scalar->toArray());
 
-        $this->expect('MyScalar2', 'custom-scalar', [
+        $scalar = $this->getType('MyScalar2', ScalarConfiguration::class);
+        $this->assertEquals([
+            'name' => 'MyScalar2',
             'scalarType' => '@=newObject(\'App\Type\EmailType\')'
-        ]);
+        ], $scalar->toArray());
     }
 
-    public function testProviders(): void
+    
+    public function testProviderRootQuery(): void
     {
-        $this->expect('RootQuery', 'object', [
+        $object = $this->getType('RootQuery', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'RootQuery',
             'fields' => [
-                'planet_searchPlanet' => [
-                    'type' => '[Planet]',
-                    'args' => ['keyword' => ['type' => 'String!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchPlanet, arguments({keyword: \"String!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
-                ],
-                'planet_isPlanetDestroyed' => [
-                    'type' => 'Boolean!',
-                    'args' => ['planetId' => ['type' => 'Int!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
-                ],
-                'countSecretWeapons' => [
+                [
+                    'name' => 'countSecretWeapons',
                     'type' => 'Int!',
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\WeaponRepository').countSecretWeapons, arguments({}, args))",
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\WeaponRepository').countSecretWeapons, arguments({}, args))",
                 ],
-                'planet_searchStar' => [
+                [
+                    'name' => 'planet_searchPlanet',
                     'type' => '[Planet]',
-                    'args' => ['distance' => ['type' => 'Int!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchStar, arguments({distance: \"Int!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'arguments' => [['name' => 'keyword', 'type' => 'String!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchPlanet, arguments({keyword: \"String!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
-            ],
-        ]);
-
-        $this->expect('RootMutation', 'object', [
-            'fields' => [
-                'planet_createPlanet' => [
-                    'type' => 'Planet',
-                    'args' => ['planetInput' => ['type' => 'PlanetInput!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanet, arguments({planetInput: \"PlanetInput!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=override_public',
+                [
+                    'name' => 'planet_searchStar',
+                    'type' => '[Planet]',
+                    'arguments' => [['name' => 'distance', 'type' => 'Int!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchStar, arguments({distance: \"Int!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
-                'planet_destroyPlanet' => [
+                [
+                    'name' => 'planet_isPlanetDestroyed',
                     'type' => 'Boolean!',
-                    'args' => ['planetId' => ['type' => 'Int!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
             ],
-        ]);
+        ], $object->toArray());
     }
 
+    public function testProviderRootMutation(): void
+    {
+        $object = $this->getType('RootMutation', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'RootMutation',
+            'fields' => [
+                [
+                    'name' => 'planet_createPlanet',
+                    'type' => 'Planet',
+                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanet, arguments({planetInput: \"PlanetInput!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'public', 'configuration' => 'override_public'],
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                    ]
+                ],
+                [
+                    'name' => 'planet_destroyPlanet',
+                    'type' => 'Boolean!',
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
+                ],
+            ],
+        ], $object->toArray());
+    }
+
+    
     public function testProvidersMultischema(): void
     {
-        $this->expect('RootQuery2', 'object', [
+        $object = $this->getType('RootQuery2', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'RootQuery2',
             'fields' => [
-                'planet_getPlanetSchema2' => [
+                [
+                    'name' => 'hasSecretWeapons',
+                    'type' => 'Boolean!',
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\WeaponRepository').hasSecretWeapons, arguments({}, args))",
+                ],
+                [
+                    'name' => 'planet_getPlanetSchema2',
                     'type' => 'Planet',
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').getPlanetSchema2, arguments({}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').getPlanetSchema2, arguments({}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
-                'planet_isPlanetDestroyed' => [
+                [
+                    'name' => 'planet_isPlanetDestroyed',
                     'type' => 'Boolean!',
-                    'args' => ['planetId' => ['type' => 'Int!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
-                'hasSecretWeapons' => [
-                    'type' => 'Boolean!',
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\WeaponRepository').hasSecretWeapons, arguments({}, args))",
-                ],
+                
             ],
-        ]);
+        ], $object->toArray());
 
-        $this->expect('RootMutation2', 'object', [
+        $object = $this->getType('RootMutation2', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'RootMutation2',
             'fields' => [
-                'planet_createPlanetSchema2' => [
+                [
+                    'name' => 'createLightsaber',
+                    'type' => 'Boolean!',
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\WeaponRepository').createLightsaber, arguments({}, args))",
+                ],
+                [
+                    'name' => 'planet_createPlanetSchema2',
                     'type' => 'Planet',
-                    'args' => ['planetInput' => ['type' => 'PlanetInput!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanetSchema2, arguments({planetInput: \"PlanetInput!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=override_public',
+                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanetSchema2, arguments({planetInput: \"PlanetInput!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'public', 'configuration' => 'override_public'],
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                    ]
                 ],
-                'planet_destroyPlanet' => [
+                [
+                    'name' => 'planet_destroyPlanet',
                     'type' => 'Boolean!',
-                    'args' => ['planetId' => ['type' => 'Int!']],
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
-                    'access' => '@=default_access',
-                    'public' => '@=default_public',
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
+                    'extensions' => [
+                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['name' => 'public', 'configuration' => 'default_public'],
+                    ]
                 ],
-                'createLightsaber' => [
-                    'type' => 'Boolean!',
-                    'resolve' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\WeaponRepository').createLightsaber, arguments({}, args))",
-                ],
+                
             ],
-        ]);
+        ], $object->toArray());
     }
-
+    
     public function testDoctrineGuessing(): void
     {
-        $this->expect('Lightsaber', 'object', [
-            'fields' => [
-                'color' => ['type' => 'String!'],
-                'size' => ['type' => 'Int'],
-                'holders' => ['type' => '[Hero]!'],
-                'creator' => ['type' => 'Hero!'],
-                'crystal' => ['type' => 'Crystal!'],
-                'battles' => ['type' => '[Battle]!'],
-                'currentHolder' => ['type' => 'Hero'],
-                'tags' => ['type' => '[String]!', 'deprecationReason' => 'No more tags on lightsabers'],
-                'text' => ['type' => 'String!'],
-                'string' => ['type' => 'String!'],
-                'float' => ['type' => 'Float!'],
-                'decimal' => ['type' => 'Float!'],
-                'bool' => ['type' => 'Boolean!'],
-                'boolean' => ['type' => 'Boolean!'],
-            ],
-        ]);
+        $object = $this->getType('Lightsaber', ObjectConfiguration::class);
+        $this->assertEquals([
+                'name' => 'Lightsaber',
+                'fields' => [
+                    ['name' => 'color', 'type' => 'String!'],
+                    ['name' => 'text', 'type' => 'String!'],
+                    ['name' => 'string', 'type' => 'String!'],
+                    ['name' => 'size', 'type' => 'Int'],
+                    ['name' => 'holders', 'type' => '[Hero]!'],
+                    ['name' => 'creator', 'type' => 'Hero!'],
+                    ['name' => 'crystal', 'type' => 'Crystal!'],
+                    ['name' => 'battles', 'type' => '[Battle]!'],
+                    ['name' => 'currentHolder', 'type' => 'Hero'],
+                    ['name' => 'tags', 'type' => '[String]!', 'deprecation' => 'No more tags on lightsabers'],
+                    ['name' => 'float', 'type' => 'Float!'],
+                    ['name' => 'decimal', 'type' => 'Float!'],
+                    ['name' => 'bool', 'type' => 'Boolean!'],
+                    ['name' => 'boolean', 'type' => 'Boolean!'],
+                ],
+            ], $object->toArray());
     }
 
+    
     public function testArgsAndReturnGuessing(): void
     {
-        $this->expect('Battle', 'object', [
+        $object = $this->getType('Battle', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'Battle',
             'fields' => [
-                'planet' => ['type' => 'Planet', 'complexity' => '@=100 + childrenComplexity'],
-                'casualties' => [
+                [
+                    'name' => 'planet',
+                    'type' => 'Planet',
+                    'extensions' => [
+                        ['name' => 'complexity', 'configuration' => '@=100 + childrenComplexity']
+                    ]
+                ],
+                [
+                    'name' => 'casualties',
                     'type' => 'Int',
-                    'args' => [
-                        'areaId' => ['type' => 'Int!'],
-                        'raceId' => ['type' => 'String!'],
-                        'dayStart' => ['type' => 'Int', 'defaultValue' => null],
-                        'dayEnd' => ['type' => 'Int', 'defaultValue' => null],
-                        'nameStartingWith' => ['type' => 'String', 'defaultValue' => ''],
-                        'planet' => ['type' => 'PlanetInput', 'defaultValue' => null],
-                        'away' => ['type' => 'Boolean', 'defaultValue' => false],
-                        'maxDistance' => ['type' => 'Float', 'defaultValue' => null],
+                    'arguments' => [
+                        ['name' => 'areaId', 'type' => 'Int!', 'defaultValue' => null],
+                        ['name' => 'raceId', 'type' => 'String!', 'defaultValue' => null],
+                        ['name' => 'dayStart', 'type' => 'Int', 'defaultValue' => null],
+                        ['name' => 'dayEnd', 'type' => 'Int', 'defaultValue' => null],
+                        ['name' => 'nameStartingWith', 'type' => 'String', 'defaultValue' => ''],
+                        ['name' => 'planet', 'type' => 'PlanetInput', 'defaultValue' => null],
+                        ['name' => 'away', 'type' => 'Boolean', 'defaultValue' => false],
+                        ['name' => 'maxDistance', 'type' => 'Float', 'defaultValue' => null],
                     ],
-                    'resolve' => '@=call(value.getCasualties, arguments({areaId: "Int!", raceId: "String!", dayStart: "Int", dayEnd: "Int", nameStartingWith: "String", planet: "PlanetInput", away: "Boolean", maxDistance: "Float"}, args))',
-                    'complexity' => '@=childrenComplexity * 5',
+                    'resolver' => '@=call(value.getCasualties, arguments({areaId: "Int!", raceId: "String!", dayStart: "Int", dayEnd: "Int", nameStartingWith: "String", planet: "PlanetInput", away: "Boolean", maxDistance: "Float"}, args))',
+                    'extensions' => [
+                        ['name' => 'complexity', 'configuration' => '@=childrenComplexity * 5']
+                    ]
                 ],
             ],
-        ]);
+        ], $object->toArray());
     }
 
     public function testRelayConnectionAuto(): void
     {
-        $this->expect('EnemiesConnection', 'object', [
-            'builders' => [
-                ['builder' => 'relay-connection', 'builderConfig' => ['edgeType' => 'EnemiesConnectionEdge']],
-            ],
-        ]);
+        $connection = $this->getType('EnemiesConnection', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'EnemiesConnection',
+            'extensions' => [
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]]
+            ]
+        ], $connection->toArray());
 
-        $this->expect('EnemiesConnectionEdge', 'object', [
-            'builders' => [
-                ['builder' => 'relay-edge', 'builderConfig' => ['nodeType' => 'Character']],
-            ],
-        ]);
+        $edge = $this->getType('EnemiesConnectionEdge', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'EnemiesConnectionEdge',
+            'extensions' => [
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]]
+            ]
+
+        ], $edge->toArray());
     }
 
     public function testRelayConnectionEdge(): void
     {
-        $this->expect('FriendsConnection', 'object', [
-            'builders' => [
-                ['builder' => 'relay-connection', 'builderConfig' => ['edgeType' => 'FriendsConnectionEdge']],
-            ],
-        ]);
+        $connection = $this->getType('FriendsConnection', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'FriendsConnection',
+            'extensions' => [
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS,'name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]]
+            ]
+        ], $connection->toArray());
 
-        $this->expect('FriendsConnectionEdge', 'object', [
-            'builders' => [
-                ['builder' => 'relay-edge', 'builderConfig' => ['nodeType' => 'Character']],
-            ],
-        ]);
+        $edge = $this->getType('FriendsConnectionEdge', ObjectConfiguration::class);
+        $this->assertEquals([
+            'name' => 'FriendsConnectionEdge',
+            'extensions' => [
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS,'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]]
+            ]
+        ], $edge->toArray());
     }
 
-    public function testInvalidMissingTypeFields(): void
-    {
-        try {
-            $file = __DIR__.'/fixtures/Invalid/missingFields';
-            $this->getConfiguration([$file]);
-            $this->fail('Missing type hint for auto-guessed argument should have raise an exception');
-        } catch (Exception $e) {
-            $this->assertInstanceOf(MetadataConfigurationException::class, $e);
-            $this->assertMatchesRegularExpression('/Argument n°1 "\$test"/', $e->getPrevious()->getMessage());
-        }
-    }
-
-    
     public function testInvalidParamGuessing(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/argumentGuessing';
         try {
-            $file = __DIR__.'/fixtures/Invalid/argumentGuessing';
             $this->getConfiguration([$file]);
             $this->fail('Missing type hint for auto-guessed argument should have raise an exception');
         } catch (Exception $e) {
@@ -545,8 +712,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
 
     public function testInvalidReturnGuessing(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/returnTypeGuessing';
         try {
-            $file = __DIR__.'/fixtures/Invalid/returnTypeGuessing';
             $this->getConfiguration([$file]);
             $this->fail('Missing type hint for auto-guessed return type should have raise an exception');
         } catch (Exception $e) {
@@ -557,8 +724,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
 
     public function testInvalidDoctrineRelationGuessing(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/doctrineRelationGuessing';
         try {
-            $file = __DIR__.'/fixtures/Invalid/doctrineRelationGuessing';
             $this->getConfiguration([$file]);
             $this->fail('Auto-guessing field type from doctrine relation on a non graphql entity should failed with an exception');
         } catch (Exception $e) {
@@ -569,8 +736,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
 
     public function testInvalidDoctrineTypeGuessing(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/doctrineTypeGuessing';
         try {
-            $file = __DIR__.'/fixtures/Invalid/doctrineTypeGuessing';
             $this->getConfiguration([$file]);
             $this->fail('Auto-guessing field type from doctrine relation on a non graphql entity should failed with an exception');
         } catch (Exception $e) {
@@ -581,8 +748,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
 
     public function testInvalidUnion(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/union';
         try {
-            $file = __DIR__.'/fixtures/Invalid/union';
             $this->getConfiguration([$file]);
             $this->fail('Union with missing resolve type shoud have raise an exception');
         } catch (Exception $e) {
@@ -591,22 +758,10 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         }
     }
 
-    public function testInvalidAccess(): void
-    {
-        try {
-            $file = __DIR__.'/fixtures/Invalid/access';
-            $this->getConfiguration([$file]);
-            $this->fail('@Access annotation without a @Field annotation should raise an exception');
-        } catch (Exception $e) {
-            $this->assertInstanceOf(MetadataConfigurationException::class, $e);
-            $this->assertMatchesRegularExpression('/The metadatas '.preg_quote($this->formatMetadata('Access')).' and\/or '.preg_quote($this->formatMetadata('Visible')).' defined on "field"/', $e->getPrevious()->getMessage());
-        }
-    }
-
     public function testFieldOnPrivateProperty(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/privateMethod';
         try {
-            $file = __DIR__.'/fixtures/Invalid/privateMethod';
             $this->getConfiguration([$file]);
             $this->fail($this->formatMetadata('Access').' annotation without a '.$this->formatMetadata('Field').' annotation should raise an exception');
         } catch (Exception $e) {
@@ -617,8 +772,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
 
     public function testInvalidProviderQueryOnMutation(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/provider';
         try {
-            $file = __DIR__.'/fixtures/Invalid/provider';
             $this->getConfiguration([$file]);
             $this->fail('Using @Query or #Query targeting mutation type should raise an exception');
         } catch (Exception $e) {
@@ -629,8 +784,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
 
     public function testInvalidProviderMutationOnQuery(): void
     {
+        $file = __DIR__.'/fixtures/Invalid/provider2';
         try {
-            $file = __DIR__.'/fixtures/Invalid/provider2';
             $this->getConfiguration([$file]);
             $this->fail('Using @Mutation or #Mutation targeting regular type should raise an exception');
         } catch (Exception $e) {

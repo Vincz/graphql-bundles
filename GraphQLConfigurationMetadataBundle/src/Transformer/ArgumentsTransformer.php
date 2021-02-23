@@ -46,7 +46,7 @@ class ArgumentsTransformer
     {
         $className = $this->classesTypesMap->resolveClass($type);
 
-        return $className !== null ? new $className() : null;
+        return null !== $className ? new $className() : null;
     }
 
     /**
