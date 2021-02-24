@@ -16,51 +16,45 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 class Planet
 {
     /**
-     * @GQL\Field(resolve="...")
+     * @GQL\InputField(type="String!", defaultValue="Sun")
      */
-    #[GQL\Field(resolve: "...")]
-    protected string $skipField;
+    #[GQL\InputField(type: "String!")]
+    protected string $name = "Sun";
 
     /**
-     * @GQL\Field(type="String!")
+     * @GQL\InputField(type="Int!")
      */
-    #[GQL\Field(type: "String!")]
-    protected string $name;
-
-    /**
-     * @GQL\Field(type="Int!")
-     */
-    #[GQL\Field(type: "Int!")]
+    #[GQL\InputField(type: "Int!")]
     protected string $population;
 
     /**
-     * @GQL\Field
+     * @GQL\InputField
      */
-    #[GQL\Field]
+    #[GQL\InputField]
     protected string $description;
 
     /**
-     * @GQL\Field
+     * @GQL\InputField
      * @ORM\Column(type="integer", nullable=true)
      */
-    #[GQL\Field]
+    #[GQL\InputField]
     // @phpstan-ignore-next-line
     protected $diameter;
 
     /**
-     * @GQL\Field
+     * @GQL\InputField
      * @ORM\Column(type="boolean")
      */
-    #[GQL\Field]
+    #[GQL\InputField]
     protected int $variable;
 
     // @phpstan-ignore-next-line
     protected $dummy;
 
     /**
-     * @GQL\Field
+     * @GQL\InputField(defaultValue={})
      * @ORM\Column(type="text[]")
      */
-    #[GQL\Field]
-    protected array $tags;
+    #[GQL\InputField]
+    protected array $tags = [];
 }

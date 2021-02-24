@@ -11,18 +11,23 @@ class Type
 {
     public static function get(Node $node): string
     {
+        return self::astTypeNodeToString($node->type);
+    }
+
+    public static function astTypeNodeToString(\GraphQL\Language\AST\TypeNode $typeNode): string
+    {
         $type = '';
-        switch ($node->kind) {
+        switch ($typeNode->kind) {
             case NodeKind::NAMED_TYPE:
-                $type = $node->name->value;
+                $type = $typeNode->name->value;
                 break;
 
             case NodeKind::NON_NULL_TYPE:
-                $type = self::get($node->type).'!';
+                $type = self::astTypeNodeToString($typeNode->type).'!';
                 break;
 
             case NodeKind::LIST_TYPE:
-                $type = '['.self::get($node->type).']';
+                $type = '['.self::astTypeNodeToString($typeNode->type).']';
                 break;
         }
 

@@ -11,12 +11,12 @@ use Overblog\GraphQLBundle\Relay\Connection\ConnectionInterface;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Overblog\GraphQLBundle\Extension\BuilderExtension;
 
 class RelayConnectionHandler extends ObjectHandler
 {
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $typeMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $typeMetadata): ?TypeConfiguration
     {
         if (!$reflectionClass->implementsInterface(ConnectionInterface::class)) {
             throw new MetadataConfigurationException(sprintf('The metadata %s on class "%s" can only be used on class implementing the ConnectionInterface.', $this->formatMetadata('Connection'), $reflectionClass->getName()));
@@ -27,23 +27,26 @@ class RelayConnectionHandler extends ObjectHandler
         }
 
         $typeConfiguration = parent::addConfiguration($configuration, $reflectionClass, $typeMetadata);
-        $edgeType = $typeMetadata->edge ?? false;
-        if (!$edgeType) {
-            $edgeType = $typeConfiguration->getName().'Edge';
-            $objectConfiguration = new ObjectConfiguration($edgeType);
-            $objectConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
-                'type' => BuilderExtension::TYPE_FIELDS,
-                'name' => 'relay-edge',
-                'configuration' => ['nodeType' => $typeMetadata->node]
-            ]));
-            $configuration->addType($objectConfiguration);
-        }
+        if ($typeConfiguration !== null) {
+            /** @var ObjectConfiguration $typeConfiguration */
+            $edgeType = $typeMetadata->edge ?? false;
+            if (!$edgeType) {
+                $edgeType = $typeConfiguration->getName().'Edge';
+                $objectConfiguration = new ObjectConfiguration($edgeType);
+                $objectConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                    'type' => BuilderExtension::TYPE_FIELDS,
+                    'name' => 'relay-edge',
+                    'configuration' => ['nodeType' => $typeMetadata->node]
+                ]));
+                $configuration->addType($objectConfiguration);
+            }
 
-        $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
-            'type' => BuilderExtension::TYPE_FIELDS,
-            'name' => 'relay-connection',
-            'configuration' => ['edgeType' => $edgeType]
-        ]));
+            $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                'type' => BuilderExtension::TYPE_FIELDS,
+                'name' => 'relay-connection',
+                'configuration' => ['edgeType' => $edgeType]
+            ]));
+        }
 
         return $typeConfiguration;
     }

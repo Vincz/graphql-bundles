@@ -15,7 +15,7 @@ use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\OneToOne;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuessingException;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -76,7 +76,7 @@ class DoctrineTypeGuesserExtension extends TypeGuesserExtension
             $associationAnnotation = $this->getAnnotation($reflector, $associationClass);
             if (null !== $associationAnnotation) {
                 $target = $this->fullyQualifiedClassName($associationAnnotation->targetEntity, $reflectionClass->getNamespaceName());
-                $type = $this->classesTypesMap->resolveType($target, [TypeConfigurationInterface::TYPE_OBJECT]);
+                $type = $this->classesTypesMap->resolveType($target, [TypeConfiguration::TYPE_OBJECT]);
 
                 if ($type) {
                     $isMultiple = $associationAnnotations[get_class($associationAnnotation)];

@@ -113,17 +113,6 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         return $generator->getConfiguration();
     }
 
-    protected function expect(string $name, string $type, array $config = []): void
-    {
-        $expected = [
-            'type' => $type,
-            'config' => $config,
-        ];
-
-        $this->assertArrayHasKey($name, $this->config, sprintf("The GraphQL type '%s' doesn't exist", $name));
-        $this->assertEquals($expected, $this->config[$name]);
-    }
-
     protected function getType(string $name, string $configurationClass = null)
     {
         $type = $this->configuration->getType($name);
@@ -338,17 +327,17 @@ abstract class ConfigurationMetadataTest extends WebTestCase
     public function testInput(): void
     {
         $input = $this->getType('PlanetInput', InputConfiguration::class);
-
+        
         $this->assertEquals([
             'name' => 'PlanetInput',
             'description' => 'Planet Input type description',
             'fields' => [
-                ['name' => 'name', 'type' => 'String!'],
+                ['name' => 'name', 'type' => 'String!', 'defaultValue' => "Sun"],
                 ['name' => 'population', 'type' => 'Int!'],
                 ['name' => 'description', 'type' => 'String!'],
                 ['name' => 'diameter', 'type' => 'Int'],
                 ['name' => 'variable', 'type' => 'Int!'],
-                ['name' => 'tags', 'type' => '[String]!'],
+                ['name' => 'tags', 'type' => '[String]!', 'defaultValue' => []],
             ],
         ], $input->toArray());
     }
@@ -360,6 +349,9 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'name' => 'WithArmor',
             'description' => 'The armored interface',
             'typeResolver' => '@=resolver(\'character_type\', [value])',
+            'extensions' => [
+                ['name' => 'CustomExtension', 'configuration' => ['config1' => 12]]
+            ]
         ], $interface->toArray());
     }
 
@@ -469,7 +461,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_searchPlanet',
                     'type' => '[Planet]',
-                    'arguments' => [['name' => 'keyword', 'type' => 'String!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'keyword', 'type' => 'String!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchPlanet, arguments({keyword: \"String!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
@@ -479,7 +471,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_searchStar',
                     'type' => '[Planet]',
-                    'arguments' => [['name' => 'distance', 'type' => 'Int!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'distance', 'type' => 'Int!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchStar, arguments({distance: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
@@ -489,7 +481,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_isPlanetDestroyed',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
@@ -509,7 +501,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_createPlanet',
                     'type' => 'Planet',
-                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanet, arguments({planetInput: \"PlanetInput!\"}, args))",
                     'extensions' => [
                         ['name' => 'public', 'configuration' => 'override_public'],
@@ -519,7 +511,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_destroyPlanet',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
@@ -554,7 +546,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_isPlanetDestroyed',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
@@ -577,7 +569,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_createPlanetSchema2',
                     'type' => 'Planet',
-                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanetSchema2, arguments({planetInput: \"PlanetInput!\"}, args))",
                     'extensions' => [
                         ['name' => 'public', 'configuration' => 'override_public'],
@@ -587,7 +579,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_destroyPlanet',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', 'defaultValue' => null]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
@@ -641,14 +633,14 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'name' => 'casualties',
                     'type' => 'Int',
                     'arguments' => [
-                        ['name' => 'areaId', 'type' => 'Int!', 'defaultValue' => null],
-                        ['name' => 'raceId', 'type' => 'String!', 'defaultValue' => null],
-                        ['name' => 'dayStart', 'type' => 'Int', 'defaultValue' => null],
-                        ['name' => 'dayEnd', 'type' => 'Int', 'defaultValue' => null],
+                        ['name' => 'areaId', 'type' => 'Int!', ],
+                        ['name' => 'raceId', 'type' => 'String!', ],
+                        ['name' => 'dayStart', 'type' => 'Int', ],
+                        ['name' => 'dayEnd', 'type' => 'Int', ],
                         ['name' => 'nameStartingWith', 'type' => 'String', 'defaultValue' => ''],
-                        ['name' => 'planet', 'type' => 'PlanetInput', 'defaultValue' => null],
+                        ['name' => 'planet', 'type' => 'PlanetInput', ],
                         ['name' => 'away', 'type' => 'Boolean', 'defaultValue' => false],
-                        ['name' => 'maxDistance', 'type' => 'Float', 'defaultValue' => null],
+                        ['name' => 'maxDistance', 'type' => 'Float', ],
                     ],
                     'resolver' => '@=call(value.getCasualties, arguments({areaId: "Int!", raceId: "String!", dayStart: "Int", dayEnd: "Int", nameStartingWith: "String", planet: "PlanetInput", away: "Boolean", maxDistance: "Float"}, args))',
                     'extensions' => [

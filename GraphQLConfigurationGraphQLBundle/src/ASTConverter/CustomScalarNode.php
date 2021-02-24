@@ -6,12 +6,12 @@ namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
 use Overblog\GraphQLBundle\Configuration\ScalarConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use RuntimeException;
 
 class CustomScalarNode implements NodeInterface
 {
-    public static function toConfiguration(Node $node): TypeConfigurationInterface
+    public static function toConfiguration(Node $node): TypeConfiguration
     {
         $scalarConfiguration = new ScalarConfiguration('');
         $scalarConfiguration->setDeprecation(Deprecated::get($node));

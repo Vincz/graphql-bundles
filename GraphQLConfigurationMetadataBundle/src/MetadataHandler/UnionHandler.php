@@ -7,13 +7,13 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
 use Overblog\GraphQLBundle\Configuration\Configuration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
 use ReflectionClass;
 
 class UnionHandler extends MetadataHandler
 {
-    const TYPE = TypeConfigurationInterface::TYPE_UNION;
+    const TYPE = TypeConfiguration::TYPE_UNION;
 
     protected function getUnionName(ReflectionClass $reflectionClass, Metadata\Metadata $unionMetadata): string
     {
@@ -31,7 +31,7 @@ class UnionHandler extends MetadataHandler
      *
      * @return array{type: 'custom-scalar', config: array}
      */
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $unionMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $unionMetadata): ?TypeConfiguration
     {
         $gqlName = $this->getUnionName($reflectionClass, $unionMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
@@ -39,6 +39,8 @@ class UnionHandler extends MetadataHandler
         $unionConfiguration = new UnionConfiguration($gqlName);
         $unionConfiguration->setDescription($this->getDescription($metadatas));
         $unionConfiguration->setDeprecation($this->getDeprecation($metadatas));
+        $unionConfiguration->addExtensions($this->getExtensions($metadatas));
+        $unionConfiguration->setOrigin($this->getOrigin($reflectionClass));
 
         if (!empty($unionMetadata->types)) {
             $types = $unionMetadata->types;
@@ -52,7 +54,7 @@ class UnionHandler extends MetadataHandler
                 }
 
                 return $typeMetadata->isSubclassOf($reflectionClass->getName());
-            }, TypeConfigurationInterface::TYPE_OBJECT));
+            }, TypeConfiguration::TYPE_OBJECT));
             sort($types);
         }
         $unionConfiguration->setTypes($types);

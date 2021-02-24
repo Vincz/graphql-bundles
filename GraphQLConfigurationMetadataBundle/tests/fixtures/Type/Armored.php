@@ -9,7 +9,7 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata as GQL;
 /**
  * @GQL\TypeInterface(name="WithArmor", typeResolver="@=resolver('character_type', [value])")
  * @GQL\Description("The armored interface")
- * @GQL\Extension("CustomExtension", {"config"=12})
+ * @GQL\Extension("CustomExtension", {"config1"=12})
  */
 #[GQL\TypeInterface("WithArmor", typeResolver: "@=resolver('character_type', [value])")]
 #[GQL\Description("The armored interface")]

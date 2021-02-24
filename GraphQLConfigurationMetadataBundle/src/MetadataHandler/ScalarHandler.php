@@ -7,12 +7,12 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ScalarConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use ReflectionClass;
 
 class ScalarHandler extends MetadataHandler
 {
-    const TYPE = TypeConfigurationInterface::TYPE_SCALAR;
+    const TYPE = TypeConfiguration::TYPE_SCALAR;
 
     protected function getScalarName(ReflectionClass $reflectionClass, Metadata\Metadata $scalarMetadata): string
     {
@@ -30,7 +30,7 @@ class ScalarHandler extends MetadataHandler
      *
      * @return array{type: 'custom-scalar', config: array}
      */
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $scalarMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $scalarMetadata): ?TypeConfiguration
     {
         $gqlName = $this->getScalarName($reflectionClass, $scalarMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
@@ -38,13 +38,15 @@ class ScalarHandler extends MetadataHandler
         $scalarConfiguration = new ScalarConfiguration($gqlName);
         $scalarConfiguration->setDescription($this->getDescription($metadatas));
         $scalarConfiguration->setDeprecation($this->getDeprecation($metadatas));
+        $scalarConfiguration->addExtensions($this->getExtensions($metadatas));
+        $scalarConfiguration->setOrigin($this->getOrigin($reflectionClass));
 
         if (isset($scalarMetadata->scalarType)) {
             $scalarConfiguration->setScalarType($this->formatExpression($scalarMetadata->scalarType));
         } else {
-            $scalarConfiguration->setSerialize(sprintf("%s::%s", $reflectionClass->getName(), 'serialize'));
-            $scalarConfiguration->setParseValue(sprintf("%s::%s", $reflectionClass->getName(), 'parseValue'));
-            $scalarConfiguration->setParseLiteral(sprintf("%s::%s", $reflectionClass->getName(), 'parseLiteral'));
+            $scalarConfiguration->setSerialize(sprintf('%s::%s', $reflectionClass->getName(), 'serialize'));
+            $scalarConfiguration->setParseValue(sprintf('%s::%s', $reflectionClass->getName(), 'parseValue'));
+            $scalarConfiguration->setParseLiteral(sprintf('%s::%s', $reflectionClass->getName(), 'parseLiteral'));
         }
 
         $configuration->addType($scalarConfiguration);

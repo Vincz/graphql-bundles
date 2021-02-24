@@ -8,28 +8,47 @@ use GraphQL\Language\AST\Node;
 use GraphQL\Utils\AST;
 use Overblog\GraphQLBundle\Configuration\ArgumentConfiguration;
 use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
+use Overblog\GraphQLBundle\Configuration\InputFieldConfiguration;
 
 class Fields
 {
-    public static function get(Node $node, string $property = 'fields'): array
+    const TYPE_FIELDS = 'fields';
+    const TYPE_ARGUMENTS = 'arguments';
+    const TYPE_INPUT_FIELDS = 'input-fields';
+
+    const TYPES = [
+        self::TYPE_FIELDS => ['property' => 'fields', 'class' => FieldConfiguration::class],
+        self::TYPE_ARGUMENTS => ['property' => 'arguments', 'class' => ArgumentConfiguration::class],
+        self::TYPE_INPUT_FIELDS => ['property' => 'fields', 'class' => InputFieldConfiguration::class]
+    ];
+
+    public static function get(Node $node, string $type = self::TYPE_FIELDS): array
     {
         $list = [];
+        $parameters = self::TYPES[$type];
+        $property = $parameters['property'];
+        $class = $parameters['class'];
+
         if (!empty($node->$property)) {
             foreach ($node->$property as $definition) {
-                $configurationClass = $property === 'fields' ? FieldConfiguration::class : ArgumentConfiguration::class;
-                $configuration = new $configurationClass($definition->name->value, Type::get($definition));
+                $configuration = new $class($definition->name->value, Type::get($definition));
                 $configuration->setDeprecation(Deprecated::get($definition));
                 $configuration->setDescription(Description::get($definition));
                 $configuration->addExtensions(Extensions::get($definition));
 
-                if (!empty($definition->arguments)) {
-                    foreach (self::get($definition, 'arguments') as $argumentConfiguration) {
-                        $configuration->addArgument($argumentConfiguration);
+                if ($type === self::TYPE_FIELDS) {
+                    if (!empty($definition->arguments)) {
+                        foreach (self::get($definition, self::TYPE_ARGUMENTS) as $argumentConfiguration) {
+                            $configuration->addArgument($argumentConfiguration);
+                        }
                     }
-                }
-
-                if ($property === 'arguments' && !empty($definition->defaultValue)) {
-                    $configuration->setDefaultValue(AST::valueFromASTUntyped($definition->defaultValue));
+                } else {
+                    if (!empty($definition->defaultValue)) {
+                        $value = AST::valueFromASTUntyped($definition->defaultValue);
+                        if ($value !== null) {
+                            $configuration->setDefaultValue($value);
+                        }
+                    }
                 }
 
                 $list[] = $configuration;

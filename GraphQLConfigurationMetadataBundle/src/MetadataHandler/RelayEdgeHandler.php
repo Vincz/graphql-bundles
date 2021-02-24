@@ -10,23 +10,28 @@ use \ReflectionClass;
 use Overblog\GraphQLBundle\Relay\Connection\EdgeInterface;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
+
 use Overblog\GraphQLBundle\Extension\BuilderExtension;
 
 class RelayEdgeHandler extends ObjectHandler
 {
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $typeMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $typeMetadata): ?TypeConfiguration
     {
         if (!$reflectionClass->implementsInterface(EdgeInterface::class)) {
             throw new MetadataConfigurationException(sprintf('The metadata %s on class "%s" can only be used on class implementing the EdgeInterface.', $this->formatMetadata('Edge'), $reflectionClass->getName()));
         }
 
         $typeConfiguration = parent::addConfiguration($configuration, $reflectionClass, $typeMetadata);
-        $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
-            'type' => BuilderExtension::TYPE_FIELDS,
-            'name' => 'relay-edge',
-            'configuration' => ['nodeType' => $typeMetadata->node]
-        ]));
+        if ($typeConfiguration !== null) {
+            /** @var ObjectConfiguration $typeConfiguration */
+            $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                'type' => BuilderExtension::TYPE_FIELDS,
+                'name' => 'relay-edge',
+                'configuration' => ['nodeType' => $typeMetadata->node]
+            ]));
+        }
 
         return $typeConfiguration;
     }

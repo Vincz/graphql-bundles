@@ -45,7 +45,7 @@ final class Query extends Field
             $this->targetTypes = is_string($targetTypes) ? [$targetTypes] : $targetTypes;
         } elseif ($targetType) {
             $this->targetTypes = is_string($targetType) ? [$targetType] : $targetType;
-            @trigger_error('The attributes "targetType" on annotation @GQL\Query is deprecated as of 0.14 and will be removed in 1.0. Use the "targetTypes" attributes instead.', E_USER_DEPRECATED);
+            trigger_deprecation('overblog/graphql-bundle', '0.14', 'The attributes "targetType" on annotation @GQL\Query is deprecated as of 0.14 and will be removed in 1.0. Use the "targetTypes" attributes instead.', E_USER_DEPRECATED);
         }
     }
 }

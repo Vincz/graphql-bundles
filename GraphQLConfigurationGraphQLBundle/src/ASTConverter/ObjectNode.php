@@ -8,14 +8,15 @@ use GraphQL\Language\AST\Node;
 use Overblog\GraphQLBundle\Configuration\InputConfiguration;
 use Overblog\GraphQLBundle\Configuration\InterfaceConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 
 class ObjectNode implements NodeInterface
 {
     protected const TYPENAME = 'object';
 
-    public static function toConfiguration(Node $node): TypeConfigurationInterface
+    public static function toConfiguration(Node $node): TypeConfiguration
     {
+        $fieldsType = Fields::TYPE_FIELDS;
         switch (static::TYPENAME) {
             case 'object':
                 $configuration = new ObjectConfiguration('');
@@ -25,18 +26,19 @@ class ObjectNode implements NodeInterface
                 break;
             case 'input-object':
                 $configuration = new InputConfiguration('');
+                $fieldsType = Fields::TYPE_INPUT_FIELDS;
                 break;
         }
         $configuration->setDeprecation(Deprecated::get($node));
         $configuration->setDescription(Description::get($node));
         $configuration->addExtensions(Extensions::get($node));
 
-        $configuration->addFields(Fields::get($node));
+        $configuration->addFields(Fields::get($node, $fieldsType));
         
         if (!empty($node->interfaces)) {
             $interfaces = [];
             foreach ($node->interfaces as $interface) {
-                $interfaces[] = Type::get($interface);
+                $interfaces[] = Type::astTypeNodeToString($interface);
             }
             if (count($interfaces) > 0) {
                 $configuration->setInterfaces($interfaces);

@@ -7,11 +7,11 @@ namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 use GraphQL\Language\AST\Node;
 use Overblog\GraphQLBundle\Configuration\EnumConfiguration;
 use Overblog\GraphQLBundle\Configuration\EnumValueConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 
 class EnumNode implements NodeInterface
 {
-    public static function toConfiguration(Node $node): TypeConfigurationInterface
+    public static function toConfiguration(Node $node): TypeConfiguration
     {
         $enumConfiguration = new EnumConfiguration('');
         $enumConfiguration->setDeprecation(Deprecated::get($node));

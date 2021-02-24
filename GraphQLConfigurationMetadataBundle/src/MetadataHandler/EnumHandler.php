@@ -8,13 +8,13 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\EnumConfiguration;
 use Overblog\GraphQLBundle\Configuration\EnumValueConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use ReflectionClass;
 use ReflectionClassConstant;
 
 class EnumHandler extends MetadataHandler
 {
-    const TYPE = TypeConfigurationInterface::TYPE_ENUM;
+    const TYPE = TypeConfiguration::TYPE_ENUM;
 
     protected function getEnumName(ReflectionClass $reflectionClass, Metadata\Metadata $enumMetadata): string
     {
@@ -30,7 +30,7 @@ class EnumHandler extends MetadataHandler
     /**
      * Add a GraphQL Union configuration from given union metadata.
      */
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $enumMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $enumMetadata): ?TypeConfiguration
     {
         $gqlName = $this->getEnumName($reflectionClass, $enumMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
@@ -38,6 +38,8 @@ class EnumHandler extends MetadataHandler
         $enumConfiguration = new EnumConfiguration($gqlName);
         $enumConfiguration->setDescription($this->getDescription($metadatas));
         $enumConfiguration->setDeprecation($this->getDeprecation($metadatas));
+        $enumConfiguration->addExtensions($this->getExtensions($metadatas));
+        $enumConfiguration->setOrigin($this->getOrigin($reflectionClass));
 
         // Annotation @EnumValue handling
         $enumValues = array_merge($this->getMetadataMatching($metadatas, Metadata\EnumValue::class), $enumMetadata->values);
@@ -49,6 +51,8 @@ class EnumHandler extends MetadataHandler
             $enumValueConfig = new EnumValueConfiguration($name, $value);
             $enumValueConfig->setDescription($this->getDescription($valueMetadatas));
             $enumValueConfig->setDeprecation($this->getDeprecation($valueMetadatas));
+            $enumValueConfig->addExtensions($this->getExtensions($valueMetadatas));
+            $enumValueConfig->setOrigin($this->getOrigin($reflectionConstant));
 
             // Search matching @EnumValue handling
             $enumValueAnnotation = current(array_filter($enumValues, fn ($enumValueAnnotation) => $enumValueAnnotation->name === $name));
@@ -65,7 +69,7 @@ class EnumHandler extends MetadataHandler
 
             $enumConfiguration->addValue($enumValueConfig);
         }
-        
+
         $configuration->addType($enumConfiguration);
 
         return $enumConfiguration;

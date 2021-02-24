@@ -10,24 +10,20 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuessing
 use Overblog\GraphQLBundle\Configuration\ArgumentConfiguration;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
-use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
-use Overblog\GraphQLBundle\Extension\AccessExtension;
-use Overblog\GraphQLBundle\Extension\PublicExtension;
+use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Overblog\GraphQLBundle\Extension\BuilderExtension;
 use Overblog\GraphQLBundle\Extension\ComplexityExtension;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 use Reflector;
-
-
 use function sprintf;
 
 class ObjectHandler extends MetadataHandler
 {
-    protected const TYPE = TypeConfigurationInterface::TYPE_OBJECT;
+    protected const TYPE = TypeConfiguration::TYPE_OBJECT;
 
     protected const OPERATION_TYPE_QUERY = 'query';
     protected const OPERATION_TYPE_MUTATION = 'mutation';
@@ -49,20 +45,21 @@ class ObjectHandler extends MetadataHandler
         }
     }
 
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $typeMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $typeMetadata): ?TypeConfiguration
     {
         if (!$typeMetadata instanceof Metadata\Type) {
             return null;
         }
-        
+
         $gqlName = $this->getTypeName($reflectionClass, $typeMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
 
         $objectConfiguration = new ObjectConfiguration($gqlName);
         $objectConfiguration->setDescription($this->getDescription($metadatas));
         $objectConfiguration->setDeprecation($this->getDeprecation($metadatas));
+        $objectConfiguration->setOrigin($this->getOrigin($reflectionClass));
 
-        $currentValue = $this->getOperationType($gqlName) !== null ? sprintf("service('%s')", $this->formatNamespaceForExpression($reflectionClass->getName())) : 'value';
+        $currentValue = null !== $this->getOperationType($gqlName) ? sprintf("service('%s')", $this->formatNamespaceForExpression($reflectionClass->getName())) : 'value';
 
         $fieldsFromProperties = $this->getGraphQLTypeFieldsFromAnnotations($reflectionClass, $this->getClassProperties($reflectionClass), $currentValue);
         $fieldsFromMethods = $this->getGraphQLTypeFieldsFromAnnotations($reflectionClass, $reflectionClass->getMethods(), $currentValue);
@@ -73,7 +70,7 @@ class ObjectHandler extends MetadataHandler
         foreach ($fields as $field) {
             $objectConfiguration->addField($field);
         }
-        
+
         if (!empty($typeMetadata->interfaces)) {
             $interfaces = $typeMetadata->interfaces;
         } else {
@@ -86,7 +83,7 @@ class ObjectHandler extends MetadataHandler
                 }
 
                 return $reflectionClass->isSubclassOf($interfaceClassName);
-            }, TypeConfigurationInterface::TYPE_INTERFACE));
+            }, TypeConfiguration::TYPE_INTERFACE));
 
             sort($interfaces);
         }
@@ -102,7 +99,7 @@ class ObjectHandler extends MetadataHandler
         if (isset($typeMetadata->resolveField)) {
             $objectConfiguration->setFieldsResolver($this->formatExpression($typeMetadata->resolveField));
         }
-        
+
         $objectConfiguration->addExtensions($this->getExtensions($metadatas));
 
         $configuration->addType($objectConfiguration);
@@ -124,7 +121,7 @@ class ObjectHandler extends MetadataHandler
 
             $targets = $this->getProviderTargetTypes($metadata, $providerMetadata);
             if (null === $targets) {
-                throw new MetadataConfigurationException("Unable to find provider targets");
+                throw new MetadataConfigurationException('Unable to find provider targets');
             }
 
             foreach ($targets as $targetType) {
@@ -138,7 +135,7 @@ class ObjectHandler extends MetadataHandler
                     'value' => $value,
                     'extensions' => $extensions,
                     'method' => $method,
-                    'operation' => $metadata instanceof Metadata\Query ? self::OPERATION_TYPE_QUERY : self::OPERATION_TYPE_MUTATION
+                    'operation' => $metadata instanceof Metadata\Query ? self::OPERATION_TYPE_QUERY : self::OPERATION_TYPE_MUTATION,
                 ];
             }
         }
@@ -146,9 +143,11 @@ class ObjectHandler extends MetadataHandler
 
     /**
      * Resolve the method target types
+     *
      * @param Metadata\Query|Metadata\Mutation $methodMetadata
-     * @param Metadata\Provider $providerMetadata
-     * @return null|string[]
+     * @param Metadata\Provider                $providerMetadata
+     *
+     * @return string[]|null
      */
     protected function getProviderTargetTypes(Metadata\Metadata $methodMetadata, Metadata\Metadata $providerMetadata): ?array
     {
@@ -180,7 +179,7 @@ class ObjectHandler extends MetadataHandler
      * Get the operation type associated with the given type
      * if $isDefaultSchema is set, ensure it is also defined in the defaultSchema
      */
-    protected function getOperationType(string $type, bool $isDefaultSchema = false):?string
+    protected function getOperationType(string $type, bool $isDefaultSchema = false): ?string
     {
         foreach ($this->schemas as $schemaName => $schema) {
             if (!$isDefaultSchema || $schemaName === $this->getDefaultSchemaName()) {
@@ -203,6 +202,7 @@ class ObjectHandler extends MetadataHandler
      * @param ReflectionProperty[]|ReflectionMethod[] $reflectors
      *
      * @return FieldConfiguration[]
+     *
      * @throws AnnotationException
      */
     protected function getGraphQLTypeFieldsFromAnnotations(ReflectionClass $reflectionClass, array $reflectors, string $currentValue = 'value'): array
@@ -252,6 +252,7 @@ class ObjectHandler extends MetadataHandler
         $fieldConfiguration->setDescription($this->getDescription($metadatas));
         $fieldConfiguration->setDeprecation($this->getDeprecation($metadatas));
         $fieldConfiguration->addExtensions($this->getExtensions($metadatas));
+        $fieldConfiguration->setOrigin($this->getOrigin($reflector));
 
         /** @var Metadata\Arg[] $argAnnotations */
         $argAnnotations = array_merge($this->getMetadataMatching($metadatas, Metadata\Arg::class), $fieldMetadata->args);
@@ -273,7 +274,7 @@ class ObjectHandler extends MetadataHandler
         foreach ($arguments as $argumentConfiguration) {
             $fieldConfiguration->addArgument($argumentConfiguration);
         }
-        
+
         $resolver = null;
         if (isset($fieldMetadata->resolve)) {
             $resolver = $this->formatExpression($fieldMetadata->resolve);
@@ -286,8 +287,8 @@ class ObjectHandler extends MetadataHandler
                 }
             }
         }
-        
-        if ($resolver !== null) {
+
+        if (null !== $resolver) {
             $fieldConfiguration->setResolver($resolver);
         }
 
@@ -313,7 +314,6 @@ class ObjectHandler extends MetadataHandler
                 throw new MetadataConfigurationException(sprintf('The attribute "fieldBuilder" on metadata %s defined on "%s" must be a string or an array where first index is the builder name and the second is the config.', $this->formatMetadata($fieldMetadataName), $reflector->getName()));
             }
         }
-    
 
         if (isset($fieldMetadata->complexity)) {
             $fieldConfiguration->addExtension(new ExtensionConfiguration(ComplexityExtension::NAME, $this->formatExpression($fieldMetadata->complexity)));
@@ -333,7 +333,7 @@ class ObjectHandler extends MetadataHandler
     protected function getGraphQLFieldsFromProviders(ReflectionClass $reflectionClass, string $targetType): array
     {
         $fields = [];
-        
+
         if (isset($this->providers[$targetType])) {
             foreach ($this->providers[$targetType] as $provider) {
                 $expectedOperation = $this->getOperationType($targetType) ?? self::OPERATION_TYPE_QUERY;
@@ -342,9 +342,9 @@ class ObjectHandler extends MetadataHandler
                     $message .= "\n".sprintf('The provider provides a "%s" but the type expects a "%s"', $provider['operation'], $expectedOperation);
                     throw new MetadataConfigurationException($message);
                 }
-                $expectedMetadata = $provider['operation'] === self::OPERATION_TYPE_QUERY ? Metadata\Query::class : Metadata\Mutation::class;
+                $expectedMetadata = self::OPERATION_TYPE_QUERY === $provider['operation'] ? Metadata\Query::class : Metadata\Mutation::class;
                 $providerField = $this->getTypeFieldConfigurationFromReflector($reflectionClass, $provider['method'], $expectedMetadata, $provider['value']);
-                if ($providerField !== null) {
+                if (null !== $providerField) {
                     $providerField->setName(sprintf('%s%s', $provider['prefix'], $providerField->getName()));
                     $fields[] = $providerField;
 
@@ -354,7 +354,7 @@ class ObjectHandler extends MetadataHandler
                             $providerExtensions[] = $providerExtension;
                         }
                     }
-                    
+
                     $providerField->addExtensions($providerExtensions);
                 }
             }
@@ -365,7 +365,6 @@ class ObjectHandler extends MetadataHandler
 
     /**
      * Format an array of args to a list of arguments in an expression.
-     * @param ArgumentConfiguration[] $args
      */
     protected function formatArgsForExpression(array $arguments): string
     {
@@ -393,10 +392,10 @@ class ObjectHandler extends MetadataHandler
             }
 
             $argumentConfiguration = new ArgumentConfiguration($parameter->getName(), $gqlType);
+            $argumentConfiguration->setOrigin($this->getOrigin($parameter));
             if ($parameter->isDefaultValueAvailable()) {
                 $argumentConfiguration->setDefaultValue($parameter->getDefaultValue());
             }
-
 
             $arguments[] = $argumentConfiguration;
         }

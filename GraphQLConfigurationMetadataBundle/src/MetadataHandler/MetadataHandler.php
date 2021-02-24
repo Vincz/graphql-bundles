@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
-use Closure;
-use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
+use Exception;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\ClassesTypesMap;
+use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInterface;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuesserInterface;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use ReflectionClass;
+use ReflectionClassConstant;
+use ReflectionMethod;
+use ReflectionParameter;
+use ReflectionProperty;
 use Reflector;
 
 abstract class MetadataHandler
@@ -20,13 +24,13 @@ abstract class MetadataHandler
     /**
      * @see https://facebook.github.io/graphql/draft/#sec-Input-and-Output-Types
      */
-    const VALID_INPUT_TYPES = [TypeConfigurationInterface::TYPE_SCALAR, TypeConfigurationInterface::TYPE_ENUM, TypeConfigurationInterface::TYPE_INPUT];
+    const VALID_INPUT_TYPES = [TypeConfiguration::TYPE_SCALAR, TypeConfiguration::TYPE_ENUM, TypeConfiguration::TYPE_INPUT];
     const VALID_OUTPUT_TYPES = [
-        TypeConfigurationInterface::TYPE_SCALAR,
-        TypeConfigurationInterface::TYPE_OBJECT,
-        TypeConfigurationInterface::TYPE_INTERFACE,
-        TypeConfigurationInterface::TYPE_UNION,
-        TypeConfigurationInterface::TYPE_ENUM
+        TypeConfiguration::TYPE_SCALAR,
+        TypeConfiguration::TYPE_OBJECT,
+        TypeConfiguration::TYPE_INTERFACE,
+        TypeConfiguration::TYPE_UNION,
+        TypeConfiguration::TYPE_ENUM,
     ];
 
     protected ClassesTypesMap $classesTypesMap;
@@ -44,11 +48,10 @@ abstract class MetadataHandler
 
     abstract public function setClassesMap(ReflectionClass $reflectionClass, Metadata\Metadata $metadata): void;
 
-    abstract public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $metadata): ?TypeConfigurationInterface;
+    abstract public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $metadata): ?TypeConfiguration;
 
     /**
      * Get the name of the default schema
-     * @return string
      */
     protected function getDefaultSchemaName(): string
     {
@@ -57,8 +60,6 @@ abstract class MetadataHandler
 
     /**
      * Get a schema configuration by its name
-     * @param string $schemaName
-     * @return null|array
      */
     protected function getSchema(string $schemaName): ?array
     {
@@ -71,8 +72,8 @@ abstract class MetadataHandler
     protected function getDescription(array $metadatas): ?string
     {
         $descriptionMeta = $this->getFirstMetadataMatching($metadatas, Metadata\Description::class);
-        
-        return $descriptionMeta !== null ? $descriptionMeta->description : null;
+
+        return null !== $descriptionMeta ? $descriptionMeta->description : null;
     }
 
     /**
@@ -82,7 +83,7 @@ abstract class MetadataHandler
     {
         $deprecatedMeta = $this->getFirstMetadataMatching($metadatas, Metadata\Deprecated::class);
 
-        return $deprecatedMeta !== null ? $deprecatedMeta->reason : null;
+        return null !== $deprecatedMeta ? $deprecatedMeta->reason : null;
     }
 
     /**
@@ -196,5 +197,40 @@ abstract class MetadataHandler
     protected function suffixName(string $name, string $suffix): string
     {
         return substr($name, -strlen($suffix)) === $suffix ? $name : sprintf('%s%s', $name, $suffix);
+    }
+
+    protected function getOrigin(Reflector $reflector): array
+    {
+        $origin = [];
+
+        switch (true) {
+            case $reflector instanceof ReflectionClass:
+                $origin['file'] = $reflector->getFileName();
+                break;
+            case $reflector instanceof ReflectionMethod:
+                $origin['file'] = $reflector->getFileName();
+                $origin['method'] = $reflector->getName();
+                $origin['line'] = $reflector->getStartLine();
+                break;
+            case $reflector instanceof ReflectionProperty:
+                $origin['file'] = $reflector->getDeclaringClass()->getFileName();
+                $origin['property'] = $reflector->getName();
+                break;
+            case $reflector instanceof ReflectionParameter:
+                $function = $reflector->getDeclaringFunction();
+                $origin['file'] = $function->getFileName();
+                $origin['method'] = $function->getName();
+                $origin['line'] = $function->getStartLine();
+                $origin['argument'] = $reflector->getName();
+                break;
+            case $reflector instanceof ReflectionClassConstant:
+                $origin['file'] = $reflector->getDeclaringClass()->getFileName();
+                $origin['constant'] = $reflector->getName();
+                break;
+            default:
+                throw new Exception('Unable to guess origin');
+        }
+
+        return $origin;
     }
 }

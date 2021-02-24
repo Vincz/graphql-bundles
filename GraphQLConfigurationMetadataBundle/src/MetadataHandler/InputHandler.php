@@ -6,17 +6,17 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
-use Overblog\GraphQLBundle\Configuration\Configuration;
-use Overblog\GraphQLBundle\Configuration\InputConfiguration;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuessingException;
-use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
-use Overblog\GraphQLBundle\Configuration\TypeConfigurationInterface;
+use Overblog\GraphQLBundle\Configuration\Configuration;
+use Overblog\GraphQLBundle\Configuration\InputFieldConfiguration;
+use Overblog\GraphQLBundle\Configuration\InputConfiguration;
+use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use ReflectionClass;
 use ReflectionProperty;
 
 class InputHandler extends MetadataHandler
 {
-    const TYPE = TypeConfigurationInterface::TYPE_INPUT;
+    const TYPE = TypeConfiguration::TYPE_INPUT;
 
     protected function getInputName(ReflectionClass $reflectionClass, Metadata\Metadata $inputMetadata): string
     {
@@ -34,7 +34,7 @@ class InputHandler extends MetadataHandler
      *
      * @return array{type: 'relay-mutation-input'|'input-object', config: array}
      */
-    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $inputMetadata): ?TypeConfigurationInterface
+    public function addConfiguration(Configuration $configuration, ReflectionClass $reflectionClass, Metadata\Metadata $inputMetadata): ?TypeConfiguration
     {
         $gqlName = $this->getInputName($reflectionClass, $inputMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
@@ -42,6 +42,8 @@ class InputHandler extends MetadataHandler
         $inputConfiguration = new InputConfiguration($gqlName);
         $inputConfiguration->setDescription($this->getDescription($metadatas));
         $inputConfiguration->setDeprecation($this->getDeprecation($metadatas));
+        $inputConfiguration->addExtensions($this->getExtensions($metadatas));
+        $inputConfiguration->setOrigin($this->getOrigin($reflectionClass));
 
         $fields = $this->getGraphQLInputFieldsFromMetadatas($reflectionClass, $this->getClassProperties($reflectionClass));
 
@@ -71,16 +73,19 @@ class InputHandler extends MetadataHandler
             $metadatas = $this->getMetadatas($reflector);
 
             /** @var Metadata\Field|null $fieldMetadata */
-            $fieldMetadata = $this->getFirstMetadataMatching($metadatas, Metadata\Field::class);
+            $fieldMetadata = $this->getFirstMetadataMatching($metadatas, Metadata\InputField::class);
 
             // No field metadata found
             if (null === $fieldMetadata) {
-                continue;
-            }
-
-            // Ignore field with resolver when the type is an Input
-            if (isset($fieldMetadata->resolve)) {
-                continue;
+                $fieldMetadata = $this->getFirstMetadataMatching($metadatas, Metadata\Field::class);
+                if (null === $fieldMetadata) {
+                    continue;
+                }
+                trigger_deprecation("overblog/graphql", "0.14", "The use of @GQL\Field or #GQL\Field on Input field is deprecated. Use @GQL\InputField or #GQL\InputField instead");
+                // Ignore field with resolver when the type is an Input
+                if (isset($fieldMetadata->resolve)) {
+                    continue;
+                }
             }
 
             if (isset($fieldMetadata->type)) {
@@ -93,18 +98,19 @@ class InputHandler extends MetadataHandler
                 }
             }
 
-            if ($fieldType) {
-                // Resolve a PHP class from a GraphQL type
-                $resolvedType = $this->classesTypesMap->getType($fieldType);
-                // We found a type but it is not allowed
-                if (null !== $resolvedType && !in_array($resolvedType['type'], self::VALID_INPUT_TYPES)) {
-                    throw new MetadataConfigurationException(sprintf('The type "%s" on "%s" is a "%s" not valid on an Input %s. Only Input, Scalar and Enum are allowed.', $fieldType, $reflector->getName(), $resolvedType['type'], $this->formatMetadata('Field')));
-                }
-            }
-
-            $fieldConfiguration = new FieldConfiguration($reflector->getName(), $fieldType);
+            $fieldConfiguration = new InputFieldConfiguration($reflector->getName(), $fieldType);
             $fieldConfiguration->setDescription($this->getDescription($metadatas));
             $fieldConfiguration->setDeprecation($this->getDeprecation($metadatas));
+            $fieldConfiguration->addExtensions($this->getExtensions($metadatas));
+            $fieldConfiguration->setOrigin($this->getOrigin($reflector));
+
+            if ($fieldMetadata instanceof Metadata\InputField) {
+                if ($fieldMetadata->defaultValue !== null) {
+                    $fieldConfiguration->setDefaultValue($fieldMetadata->defaultValue);
+                } elseif (PHP_VERSION_ID >= 80000 && $reflector->hasDefaultValue()) {
+                    $fieldConfiguration->setDefaultValue($reflector->getDefaultValue());
+                }
+            }
 
             $fields[] = $fieldConfiguration;
         }

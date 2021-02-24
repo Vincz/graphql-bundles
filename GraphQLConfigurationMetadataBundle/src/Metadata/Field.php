@@ -6,7 +6,6 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
 
-
 /**
  * Annotation for GraphQL field.
  *
@@ -63,6 +62,8 @@ class Field extends Metadata
      * Complexity expression.
      *
      * @var string
+     *
+     * @deprecated
      */
     public ?string $complexity;
 
@@ -86,22 +87,26 @@ class Field extends Metadata
     ) {
         $this->name = $name;
         $this->type = $type;
-        $this->args = $args;
         $this->resolve = $resolve;
+        $this->args = $args;
         $this->argsBuilder = $argsBuilder;
         $this->fieldBuilder = $fieldBuilder;
         $this->complexity = $complexity;
 
         if (null !== $argsBuilder) {
-            @trigger_error('The attributes "argsBuilder" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use a @ArgsBuilder annotation on the property or method instead.', E_USER_DEPRECATED);
+            trigger_deprecation('overblog/graphql-bundle', '0.14', 'The attributes "argsBuilder" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use a @ArgsBuilder annotation on the property or method instead.');
         }
 
         if (null !== $fieldBuilder) {
-            @trigger_error('The attributes "fieldBuilder" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use a @FieldBuilder annotation on the property or method instead.', E_USER_DEPRECATED);
+            trigger_deprecation('overblog/graphql-bundle', '0.14', 'The attributes "fieldBuilder" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use a @FieldBuilder annotation on the property or method instead.');
         }
 
         if (!empty($args)) {
-            @trigger_error('The attributes "args" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use the @Arg annotation on the property or method instead.', E_USER_DEPRECATED);
+            trigger_deprecation('overblog/graphql-bundle', '0.14', 'The attributes "args" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use the @Arg annotation on the property or method instead.');
+        }
+
+        if (null !== $complexity) {
+            trigger_deprecation('overblog/graphql-bundle', '0.14', 'The attributes "complexity" on annotation @GQL\Field is deprecated as of 0.14 and will be removed in 1.0. Use the Complexity Extension instead.');
         }
     }
 }

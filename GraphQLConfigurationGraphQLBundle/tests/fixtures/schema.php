@@ -3,148 +3,123 @@
 declare(strict_types=1);
 
 return [
-    'Query' => [
-        'type' => 'object',
-        'config' => [
-            'description' => 'Root Query',
-            'fields' => [
-                'hero' => [
-                    'type' => 'Character',
-                    'description' => null,
-                    'args' => [
-                        'episodes' => [
-                            'type' => '[Episode!]!',
-                            'description' => 'Episode list to use to filter',
-                            'defaultValue' => ['NEWHOPE', 'EMPIRE'],
-                        ],
-                    ],
-                ],
-                'droid' => [
-                    'type' => 'Droid',
-                    'description' => 'search for a droid',
-                    'args' => [
-                        'id' => [
-                            'type' => 'ID!',
-                            'description' => null,
-                        ],
-                    ],
-                ],
+    [
+        'name' => 'Year',
+        'serialize' => Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class.'::mustOverrideConfig',
+        'parseValue' => Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class.'::mustOverrideConfig',
+        'parseLiteral' => Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class.'::mustOverrideConfig',
+    ],
+    [
+        'name' => 'ReviewInput',
+        'fields' => [
+            ['name' => 'stars', 'type' => 'Int!', 'defaultValue' => 5],
+            ['name' => 'rate', 'type' => 'Float!', 'defaultValue' => 1.58],
+            ['name' => 'commentary', 'type' => 'String'],
+        ],
+    ],
+    [
+        'name' => 'SearchResult',
+        'types' => ['Human', 'Droid', 'Starship'],
+    ],
+    [
+        'name' => 'Droid',
+        'interfaces' => ['Character'],
+        'fields' => [
+            ['name' => 'id', 'type' => 'ID!'],
+            [
+                'name' => 'name',
+                'type' => 'String!',
+                'extensions' => [
+                    ['name' => 'access', 'configuration' => ['foo', 'bar']]
+                ]
+            ],
+            ['name' => 'friends', 'type' => '[Character]'],
+            ['name' => 'appearsIn', 'type' => '[Episode]!'],
+            ['name' => 'primaryFunction', 'type' => 'String'],
+        ],
+    ],
+    [
+        'name' => 'Human',
+        'interfaces' => ['Character'],
+        'fields' => [
+            ['name' => 'id' ,'type' => 'ID!'],
+            ['name' => 'name' ,'type' => 'String!'],
+            ['name' => 'friends' ,'type' => '[Character]'],
+            ['name' => 'appearsIn' ,'type' => '[Episode]!'],
+            ['name' => 'starships' ,'type' => '[Starship]'],
+            ['name' => 'totalCredits' ,'type' => 'Int'],
+        ],
+        
+    ],
+    [
+        'name' => 'Character',
+        'fields' => [
+            ['name' => 'id' ,'type' => 'ID!'],
+            ['name' => 'name' ,'type' => 'String!'],
+            ['name' => 'friends' ,'type' => '[Character]'],
+            ['name' => 'appearsIn' ,'type' => '[Episode]!'],
+            ['name' => 'deprecatedField' ,
+                'type' => 'String!',
+                'deprecation' => 'This field was deprecated!',
             ],
         ],
     ],
-    'Starship' => [
-        'type' => 'object',
-        'config' => [
-            'description' => null,
-            'fields' => [
-                'id' => ['type' => 'ID!', 'description' => null],
-                'name' => ['type' => 'String!', 'description' => null],
-                'length' => [
-                    'type' => 'Float',
-                    'description' => null,
-                    'args' => [
-                        'unit' => [
-                            'type' => 'LengthUnit',
-                            'description' => null,
-                            'defaultValue' => 'METER',
-                        ],
-                    ],
-                ],
+    [
+        'name' => 'Episode',
+        'values' => [
+            ['name' => 'NEWHOPE' , 'value' => 'NEWHOPE' ],
+            [
+                'name' => 'EMPIRE' ,
+                'description' => 'Star Wars: Episode V – The Empire Strikes Back',
+                'value' => 'EMPIRE',
+            ],
+            [
+                'name' => 'JEDI' ,
+                'deprecation' => 'No longer supported',
+                'value' => 'JEDI',
+                
             ],
         ],
     ],
-    'Episode' => [
-        'type' => 'enum',
-        'config' => [
-            'description' => null,
-            'values' => [
-                'NEWHOPE' => [
-                    'description' => null,
-                    'value' => 'NEWHOPE',
-                ],
-                'EMPIRE' => [
-                    'description' => 'Star Wars: Episode V – The Empire Strikes Back',
-                    'value' => 'EMPIRE',
-                ],
-                'JEDI' => [
-                    'description' => null,
-                    'value' => 'JEDI',
-                    'deprecationReason' => 'No longer supported',
-                ],
+    [
+        'name' => 'Starship',
+        'fields' => [
+            ['name' => 'id' ,'type' => 'ID!', ],
+            ['name' => 'name' ,'type' => 'String!', ],
+            [
+                'name' => 'length' ,
+                'type' => 'Float',
+                'arguments' => [[
+                    'name' => 'unit',
+                    'type' => 'LengthUnit',
+                    'defaultValue' => 'METER',
+                ]],
             ],
         ],
     ],
-    'Character' => [
-        'type' => 'interface',
-        'config' => [
-            'description' => null,
-            'fields' => [
-                'id' => ['type' => 'ID!', 'description' => null],
-                'name' => ['type' => 'String!', 'description' => null],
-                'friends' => ['type' => '[Character]', 'description' => null],
-                'appearsIn' => ['type' => '[Episode]!', 'description' => null],
-                'deprecatedField' => [
-                    'type' => 'String!',
-                    'description' => null,
-                    'deprecationReason' => 'This field was deprecated!',
-                ],
+    [
+        'name' => 'Query',
+        'description' => 'Root Query',
+        'fields' => [
+            [
+                'name' => 'hero',
+                'type' => 'Character',
+                'arguments' => [[
+                    'name' => 'episodes',
+                    'type' => '[Episode!]!',
+                    'description' => 'Episode list to use to filter',
+                    'defaultValue' => ['NEWHOPE', 'EMPIRE'],
+                ]],
+            ],
+            [
+                'name' => 'droid',
+                'type' => 'Droid',
+                'description' => 'search for a droid',
+                'arguments' => [[
+                    'name' => 'id',
+                    'type' => 'ID!'
+                ]],
             ],
         ],
-    ],
-    'Human' => [
-        'type' => 'object',
-        'config' => [
-            'description' => null,
-            'fields' => [
-                'id' => ['type' => 'ID!', 'description' => null],
-                'name' => ['type' => 'String!', 'description' => null],
-                'friends' => ['type' => '[Character]', 'description' => null],
-                'appearsIn' => ['type' => '[Episode]!', 'description' => null],
-                'starships' => ['type' => '[Starship]', 'description' => null],
-                'totalCredits' => ['type' => 'Int', 'description' => null],
-            ],
-            'interfaces' => ['Character'],
-        ],
-    ],
-    'Droid' => [
-        'type' => 'object',
-        'config' => [
-            'description' => null,
-            'fields' => [
-                'id' => ['type' => 'ID!', 'description' => null],
-                'name' => ['type' => 'String!', 'description' => null],
-                'friends' => ['type' => '[Character]', 'description' => null],
-                'appearsIn' => ['type' => '[Episode]!', 'description' => null],
-                'primaryFunction' => ['type' => 'String', 'description' => null],
-            ],
-            'interfaces' => ['Character'],
-        ],
-    ],
-    'SearchResult' => [
-        'type' => 'union',
-        'config' => [
-            'description' => null,
-            'types' => ['Human', 'Droid', 'Starship'],
-        ],
-    ],
-    'ReviewInput' => [
-        'type' => 'input-object',
-        'config' => [
-            'description' => null,
-            'fields' => [
-                'stars' => ['type' => 'Int!', 'description' => null, 'defaultValue' => 5],
-                'rate' => ['type' => 'Float!', 'description' => null, 'defaultValue' => 1.58],
-                'commentary' => ['type' => 'String', 'description' => null, 'defaultValue' => null],
-            ],
-        ],
-    ],
-    'Year' => [
-        'type' => 'custom-scalar',
-        'config' => [
-            'description' => null,
-            'serialize' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
-            'parseValue' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
-            'parseLiteral' => [Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode::class, 'mustOverrideConfig'],
-        ],
-    ],
+    ]
 ];
