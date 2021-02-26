@@ -89,7 +89,7 @@ class TypesConfiguration implements ConfigurationInterface
                 ->cannotBeOverwritten()
                 ->children()
                     ->scalarNode('class_name') // Devrait être géré globalement
-                        ->isRequired()
+                        //->isRequired()
                         ->validate()
                             ->ifTrue(fn ($name) => !preg_match('/^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*$/', $name))
                             ->thenInvalid('A valid class name starts with a letter or underscore, followed by any number of letters, numbers, or underscores.')

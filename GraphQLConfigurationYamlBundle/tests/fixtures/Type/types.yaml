@@ -1,7 +1,7 @@
-NodeInterface:
-    type: relay-node
-    config:
-        resolveType: '@=service("overblog_graphql.test.resolver.global").typeResolver(value)'
+#NodeInterface:
+#    type: relay-node
+#    config:
+#        resolveType: '@=service("overblog_graphql.test.resolver.global").typeResolver(value)'
 
 Query:
     type: object
@@ -23,11 +23,17 @@ User:
             id:
                 builder: 'Relay::GlobalId'
             name: String
+            password:
+                access: '@=hasRole("ROLE_ADMIN")'
+                type: String
         interfaces: [NodeInterface]
 
 Photo:
     type: object
     config:
+        extensions:
+            - { name: 'Access', configuration: '@=isAuthenticated' }
+        fieldsDefaultAccess: '@=hasRole("ROLE_ADMIN")'
         fields:
             id:
                 builder: 'Relay::GlobalId'

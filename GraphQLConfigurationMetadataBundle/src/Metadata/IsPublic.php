@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
-use Overblog\GraphQLBundle\Extension\PublicExtension;
+use Overblog\GraphQLBundle\Extension\IsPublic\IsPublicExtension;
 
 /**
  * Annotation for GraphQL public on fields.
@@ -19,7 +19,7 @@ final class IsPublic extends Extension
 {
     public function __construct(string $expression)
     {
-        $this->name = PublicExtension::NAME;
+        $this->name = IsPublicExtension::NAME;
         $this->configuration = $expression;
     }
 }

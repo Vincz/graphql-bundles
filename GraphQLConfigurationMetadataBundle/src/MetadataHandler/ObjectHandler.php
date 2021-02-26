@@ -13,7 +13,7 @@ use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
 use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
-use Overblog\GraphQLBundle\Extension\BuilderExtension;
+use Overblog\GraphQLBundle\Extension\Builder\BuilderExtension;
 use Overblog\GraphQLBundle\Extension\ComplexityExtension;
 use ReflectionClass;
 use ReflectionMethod;

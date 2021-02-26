@@ -25,6 +25,7 @@ class ObjectTypeDefinition extends TypeWithOutputFieldsDefinition
                 ->append($this->outputFieldsSection())
                 ->append($this->fieldsBuilderSection())
                 ->append($this->descriptionSection())
+                ->append($this->extensionsSection())
                 ->arrayNode('interfaces')
                     ->prototype('scalar')->info('One of internal or custom interface types.')->end()
                 ->end()

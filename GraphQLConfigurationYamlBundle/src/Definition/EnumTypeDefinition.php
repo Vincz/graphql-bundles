@@ -46,12 +46,14 @@ class EnumTypeDefinition extends TypeDefinition
                             ->scalarNode('value')->isRequired()->end()
                             ->append($this->descriptionSection())
                             ->append($this->deprecationReasonSection())
+                            ->append($this->extensionsSection())
                         ->end()
                     ->end()
                     ->isRequired()
                     ->requiresAtLeastOneElement()
                 ->end()
                 ->append($this->descriptionSection())
+                ->append($this->extensionsSection())
             ->end();
 
         return $node;

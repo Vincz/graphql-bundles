@@ -29,6 +29,7 @@ class InputObjectTypeDefinition extends TypeDefinition
                         ->end()
                         ->append($this->typeSection(true))
                         ->append($this->descriptionSection())
+                        ->append($this->extensionsSection())
                         ->append($this->defaultValueSection())
                         ->append($this->validationSection(self::VALIDATION_LEVEL_PROPERTY))
                     ->end()
@@ -36,6 +37,7 @@ class InputObjectTypeDefinition extends TypeDefinition
                     ->requiresAtLeastOneElement()
                 ->end()
                 ->append($this->descriptionSection())
+                ->append($this->extensionsSection())
             ->end();
 
         return $node;

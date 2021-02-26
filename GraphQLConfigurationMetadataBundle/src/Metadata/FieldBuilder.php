@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
-use Overblog\GraphQLBundle\Extension\BuilderExtension;
+use Overblog\GraphQLBundle\Extension\Builder\BuilderExtension;
 
 /**
  * Annotation for GraphQL field builders.

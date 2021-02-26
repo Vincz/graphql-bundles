@@ -26,6 +26,7 @@ class UnionTypeDefinition extends TypeDefinition
                 ->end()
                 ->append($this->resolveTypeSection())
                 ->append($this->descriptionSection())
+                ->append($this->extensionsSection())
             ->end();
 
         return $node;

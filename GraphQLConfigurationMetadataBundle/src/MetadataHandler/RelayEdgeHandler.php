@@ -10,7 +10,7 @@ use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
-use Overblog\GraphQLBundle\Extension\BuilderExtension;
+use Overblog\GraphQLBundle\Extension\Builder\BuilderExtension;
 use Overblog\GraphQLBundle\Relay\Connection\EdgeInterface;
 use ReflectionClass;
 

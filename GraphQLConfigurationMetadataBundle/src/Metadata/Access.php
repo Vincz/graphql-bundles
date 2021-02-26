@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
-use Overblog\GraphQLBundle\Extension\AccessExtension;
+use Overblog\GraphQLBundle\Extension\Access\AccessExtension;
 
 /**
  * Annotation for GraphQL access on fields.

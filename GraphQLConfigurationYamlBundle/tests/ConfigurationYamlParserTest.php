@@ -22,6 +22,7 @@ class ConfigurationYamlParserTest extends WebTestCase
     {
         parent::setup();
         $this->configuration = unserialize(serialize($this->getConfiguration()));
+        dump($this->configuration);
     }
 
     protected function getConfiguration(array $includeDirectories = [])

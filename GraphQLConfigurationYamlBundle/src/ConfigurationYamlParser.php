@@ -8,6 +8,7 @@ use Overblog\GraphQLBundle\Configuration\ArgumentConfiguration;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\EnumConfiguration;
 use Overblog\GraphQLBundle\Configuration\EnumValueConfiguration;
+use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
 use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
 use Overblog\GraphQLBundle\Configuration\InputConfiguration;
 use Overblog\GraphQLBundle\Configuration\InputFieldConfiguration;
@@ -17,6 +18,9 @@ use Overblog\GraphQLBundle\Configuration\ScalarConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
 use Overblog\GraphQLBundle\ConfigurationProvider\ConfigurationFilesParser;
+use Overblog\GraphQLBundle\Extension\Access\AccessExtension;
+use Overblog\GraphQLBundle\Extension\Builder\BuilderExtension;
+use Overblog\GraphQLBundle\Extension\IsPublic\IsPublicExtension;
 use SplFileInfo;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
@@ -91,10 +95,6 @@ class ConfigurationYamlParser extends ConfigurationFilesParser
      */
     protected function configArrayToTypeConfiguration(string $name, array $typeConfig): ?TypeConfiguration
     {
-        // Ignore decorator
-        if (true === $typeConfig['decorator']) {
-            return null;
-        }
         $config = $typeConfig['config'];
         $configType = $typeConfig['type'];
 
@@ -110,8 +110,17 @@ class ConfigurationYamlParser extends ConfigurationFilesParser
                 if (TypesConfiguration::TYPE_OBJECT === $configType && count($config['interfaces']) > 0) {
                     $typeConfiguration->setInterfaces($config['interfaces']);
                 }
+                if (isset($config['builders'])) {
+                    foreach ($config['builders'] as $fieldsBuilder) {
+                        $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                            'type' => BuilderExtension::TYPE_FIELDS,
+                            'name' => $fieldsBuilder['builder'],
+                            'configuration' => $fieldsBuilder['builderConfig'] ?? null,
+                        ]));
+                    }
+                }
                 foreach ($config['fields'] as $fieldName => $fieldConfig) {
-                    $fieldConfiguration = new FieldConfiguration($fieldName, $fieldConfig['type']);
+                    $fieldConfiguration = new FieldConfiguration($fieldName, $fieldConfig['type'] ?? '--replaced-by-builder--');
                     $this->setCommonProperties($fieldConfiguration, $fieldConfig);
                     if (isset($fieldConfig['resolve'])) {
                         $fieldConfiguration->setResolver($fieldConfig['resolve']);
@@ -123,6 +132,34 @@ class ConfigurationYamlParser extends ConfigurationFilesParser
                             $fieldConfiguration->addArgument($argumentConfiguration);
                         }
                     }
+                    if (isset($fieldConfig['builder'])) {
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                            'type' => BuilderExtension::TYPE_FIELD,
+                            'name' => $fieldConfig['builder'],
+                            'configuration' => $fieldConfig['configuration'] ?? null,
+                        ]));
+                    }
+                    if (isset($fieldConfig['argsBuilder'])) {
+                        if (is_string($fieldConfiguration['argsBuilder'])) {
+                            $name = $fieldConfiguration['argsBuilder'];
+                            $configuration = null;
+                        } else {
+                            $name = $fieldConfiguration['argsBuilder']['builder'];
+                            $configuration = $fieldConfiguration['argsBuilder']['config'] ?? null;
+                        }
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                            'type' => BuilderExtension::TYPE_ARGS,
+                            'name' => $name,
+                            'configuration' => $configuration,
+                        ]));
+                    }
+                    if (isset($fieldConfig['access'])) {
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(AccessExtension::NAME, $fieldConfig['access']));
+                    }
+                    if (isset($fieldConfig['public'])) {
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(IsPublicExtension::NAME, $fieldConfig['public']));
+                    }
+
                     $typeConfiguration->addField($fieldConfiguration);
                 }
                 break;
@@ -179,8 +216,13 @@ class ConfigurationYamlParser extends ConfigurationFilesParser
         if (isset($config['description'])) {
             $typeConfiguration->setDescription($config['description']);
         }
+
         if (isset($config['deprecationReason'])) {
             $typeConfiguration->setDeprecation($config['deprecationReason']);
+        }
+
+        foreach ($config['extensions'] as $extension) {
+            $typeConfiguration->addExtension(new ExtensionConfiguration($extension['name'], $extension['configuration']));
         }
     }
 }

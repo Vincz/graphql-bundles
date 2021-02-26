@@ -43,7 +43,7 @@ abstract class TypeDefinition
         $node = self::createNode('name', 'scalar');
 
         $node
-            ->isRequired()
+            //->isRequired()
             ->validate()
                 ->ifTrue(fn ($name) => !preg_match('/^[_a-z][_0-9a-z]*$/i', $name))
                 ->thenInvalid('Invalid type name "%s". (see http://spec.graphql.org/June2018/#sec-Names)')
@@ -138,6 +138,21 @@ abstract class TypeDefinition
         $node = self::createNode('deprecationReason', 'scalar');
 
         $node->info('Text describing why this field is deprecated. When not empty - field will not be returned by introspection queries (unless forced)');
+
+        return $node;
+    }
+
+    protected function extensionsSection(): ArrayNodeDefinition
+    {
+        $node = self::createNode('extensions');
+
+        $prototype = $node->prototype('array');
+
+        $prototype
+            ->children()
+                ->scalarNode('name')->isRequired()->end()
+                ->variableNode('configuration')->end()
+            ->end();
 
         return $node;
     }
