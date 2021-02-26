@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationXmlBundle;
 
 use DOMElement;
-use Overblog\GraphQLBundle\Configuration\ConfigurationFilesParser;
+use InvalidArgumentException;
+use Overblog\GraphQLBundle\ConfigurationProvider\ConfigurationFilesParser;
 use SplFileInfo;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Util\XmlUtils;
@@ -32,7 +33,7 @@ class ConfigurationXmlParser extends ConfigurationFilesParser
                     $typesConfig = array_merge($typesConfig, $values);
                 }
             }
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             throw new InvalidConfigurationException(sprintf('The file "%s" does not contain valid XML.', $file), $e->getCode(), $e);
         }
 

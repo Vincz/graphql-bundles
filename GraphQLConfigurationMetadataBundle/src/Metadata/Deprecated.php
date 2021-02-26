@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
-use \Attribute;
+use Attribute;
 
 /**
  * Annotation for GraphQL to mark a field as deprecated.

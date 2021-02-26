@@ -58,7 +58,7 @@ class ConfigurationGraphQLParser extends ConfigurationFilesParser
         foreach ($files as $file) {
             $this->parseFile($file);
         }
-        
+
         return $this->configuration;
     }
 

@@ -27,9 +27,9 @@ abstract class Builder extends Extension
         $this->configuration = [
             'type' => $this->getBuilderType(),
             'name' => $name,
-            'configuration' => $configuration
+            'configuration' => $configuration,
         ];
     }
 
-    abstract public function getBuilderType():string;
+    abstract public function getBuilderType(): string;
 }

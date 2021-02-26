@@ -5,16 +5,13 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\Tests;
 
 use Exception;
-use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ConfigurationGraphQLParser;
 use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter\CustomScalarNode;
+use Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ConfigurationGraphQLParser;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use function sprintf;
 use const DIRECTORY_SEPARATOR;
-use SplFileInfo;
-
-use Symfony\Component\Finder\Finder;
 
 class ConfigurationGraphQLTest extends WebTestCase
 {
@@ -31,12 +28,11 @@ class ConfigurationGraphQLTest extends WebTestCase
         });
     }
 
-
     protected function getConfiguration(string $directory = null)
     {
-        $directories = $directory !== null ? [$directory] : [ __DIR__.'/fixtures/schema'];
+        $directories = null !== $directory ? [$directory] : [__DIR__.'/fixtures/schema'];
         $generator = new ConfigurationGraphQLParser($directories);
-        
+
         return $generator->getConfiguration();
     }
 

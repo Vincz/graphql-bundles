@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
-use GraphQL\Language\AST\StringValueNode;
 use GraphQL\Type\Definition\Directive;
-
-use function trim;
 
 class Deprecated
 {
@@ -22,7 +19,7 @@ class Deprecated
                 return $reason;
             }
         }
-        
+
         return null;
     }
 }

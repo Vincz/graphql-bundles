@@ -8,8 +8,8 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\TypeGuesser\TypeGuessingException;
 use Overblog\GraphQLBundle\Configuration\Configuration;
-use Overblog\GraphQLBundle\Configuration\InputFieldConfiguration;
 use Overblog\GraphQLBundle\Configuration\InputConfiguration;
+use Overblog\GraphQLBundle\Configuration\InputFieldConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use ReflectionClass;
 use ReflectionProperty;
@@ -63,7 +63,7 @@ class InputHandler extends MetadataHandler
      *
      * @throws AnnotationException
      *
-     * @return FieldConfiguration[]
+     * @return InputFieldConfiguration[]
      */
     protected function getGraphQLInputFieldsFromMetadatas(ReflectionClass $reflectionClass, array $reflectors): array
     {
@@ -81,7 +81,7 @@ class InputHandler extends MetadataHandler
                 if (null === $fieldMetadata) {
                     continue;
                 }
-                trigger_deprecation("overblog/graphql", "0.14", "The use of @GQL\Field or #GQL\Field on Input field is deprecated. Use @GQL\InputField or #GQL\InputField instead");
+                trigger_deprecation('overblog/graphql', '0.14', "The use of @GQL\Field or #GQL\Field on Input field is deprecated. Use @GQL\InputField or #GQL\InputField instead");
                 // Ignore field with resolver when the type is an Input
                 if (isset($fieldMetadata->resolve)) {
                     continue;
@@ -92,7 +92,7 @@ class InputHandler extends MetadataHandler
                 $fieldType = $fieldMetadata->type;
             } else {
                 try {
-                    $fieldType = $this->typeGuesser->guessType($reflectionClass, $reflector, self::VALID_INPUT_TYPES);
+                    $fieldType = $this->typeGuesser->guessType($reflectionClass, $reflector, TypeConfiguration::VALID_INPUT_TYPES);
                 } catch (TypeGuessingException $e) {
                     throw new MetadataConfigurationException(sprintf('The attribute "type" on %s is missing on property "%s" and cannot be auto-guessed from the following type guessers:'."\n%s\n", $this->formatMetadata(Metadata\Field::class), $reflector->getName(), $e->getMessage()));
                 }
@@ -105,7 +105,7 @@ class InputHandler extends MetadataHandler
             $fieldConfiguration->setOrigin($this->getOrigin($reflector));
 
             if ($fieldMetadata instanceof Metadata\InputField) {
-                if ($fieldMetadata->defaultValue !== null) {
+                if (null !== $fieldMetadata->defaultValue) {
                     $fieldConfiguration->setDefaultValue($fieldMetadata->defaultValue);
                 } elseif (PHP_VERSION_ID >= 80000 && $reflector->hasDefaultValue()) {
                     $fieldConfiguration->setDefaultValue($reflector->getDefaultValue());

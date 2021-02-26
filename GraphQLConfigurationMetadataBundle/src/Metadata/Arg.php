@@ -6,7 +6,6 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 
 use Attribute;
 
-
 /**
  * Annotation for GraphQL argument.
  *

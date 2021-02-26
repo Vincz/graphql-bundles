@@ -5,12 +5,8 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\ASTConverter;
 
 use GraphQL\Language\AST\Node;
-use GraphQL\Language\AST\StringValueNode;
-use GraphQL\Type\Definition\Directive;
 use GraphQL\Utils\AST;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
-
-use function trim;
 
 class Extensions
 {
@@ -24,7 +20,7 @@ class Extensions
                 $extensions[] = new ExtensionConfiguration($name, $configuration);
             }
         }
-        
+
         return $extensions;
     }
 }

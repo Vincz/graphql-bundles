@@ -19,7 +19,7 @@ class Fields
     const TYPES = [
         self::TYPE_FIELDS => ['property' => 'fields', 'class' => FieldConfiguration::class],
         self::TYPE_ARGUMENTS => ['property' => 'arguments', 'class' => ArgumentConfiguration::class],
-        self::TYPE_INPUT_FIELDS => ['property' => 'fields', 'class' => InputFieldConfiguration::class]
+        self::TYPE_INPUT_FIELDS => ['property' => 'fields', 'class' => InputFieldConfiguration::class],
     ];
 
     public static function get(Node $node, string $type = self::TYPE_FIELDS): array
@@ -36,7 +36,7 @@ class Fields
                 $configuration->setDescription(Description::get($definition));
                 $configuration->addExtensions(Extensions::get($definition));
 
-                if ($type === self::TYPE_FIELDS) {
+                if (self::TYPE_FIELDS === $type) {
                     if (!empty($definition->arguments)) {
                         foreach (self::get($definition, self::TYPE_ARGUMENTS) as $argumentConfiguration) {
                             $configuration->addArgument($argumentConfiguration);
@@ -45,7 +45,7 @@ class Fields
                 } else {
                     if (!empty($definition->defaultValue)) {
                         $value = AST::valueFromASTUntyped($definition->defaultValue);
-                        if ($value !== null) {
+                        if (null !== $value) {
                             $configuration->setDefaultValue($value);
                         }
                     }

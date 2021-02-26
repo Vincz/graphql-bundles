@@ -34,7 +34,7 @@ class ObjectNode implements NodeInterface
         $configuration->addExtensions(Extensions::get($node));
 
         $configuration->addFields(Fields::get($node, $fieldsType));
-        
+
         if (!empty($node->interfaces)) {
             $interfaces = [];
             foreach ($node->interfaces as $interface) {

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Overblog\GraphQL\Bundle\ConfigurationGraphQLBundle\DependencyInjection;
 
+use ReflectionClass;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
-use ReflectionClass;
 
 class OverblogGraphQLConfigurationGraphQLExtension extends Extension
 {
@@ -19,14 +19,14 @@ class OverblogGraphQLConfigurationGraphQLExtension extends Extension
         $loader->load('services.yaml');
 
         $directories = $this->resolveMappingDirectories($container, $config['mapping']);
-        $container->setParameter("graphql.configuration.directories.graphql", $directories);
+        $container->setParameter('graphql.configuration.directories.graphql', $directories);
     }
 
     protected function resolveMappingDirectories(ContainerBuilder $container, array $config): array
     {
         $rootDirectory = $container->getParameter('kernel.project_dir');
         $bundles = $container->getParameter('kernel.bundles');
-        
+
         $directories = [];
         if ($config['auto_discover']['root_dir']) {
             $directories[] = sprintf('%s/config/graphql', $rootDirectory);

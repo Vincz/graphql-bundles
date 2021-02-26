@@ -23,7 +23,7 @@ class EnumNode implements NodeInterface
             $valueConfiguration->setDeprecation(Deprecated::get($value));
             $valueConfiguration->setDescription(Description::get($value));
             $valueConfiguration->addExtensions(Extensions::get($value));
-            
+
             $enumConfiguration->addValue($valueConfiguration);
         }
 

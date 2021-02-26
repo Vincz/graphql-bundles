@@ -17,7 +17,6 @@ class UnionNode implements NodeInterface
         $unionConfiguration->setDescription(Description::get($node));
         $unionConfiguration->addExtensions(Extensions::get($node));
 
-
         if (!empty($node->types)) {
             $types = [];
             foreach ($node->types as $type) {

@@ -34,10 +34,10 @@ class Planet
     protected int $population;
 
     /**
-     * @GQL\Field
+     * @GQL\Field(type="Builder")
      * @GQL\FieldBuilder(name="NoteFieldBuilder", configuration={"option1"="value1"})
      */
-    #[GQL\Field]
+    #[GQL\Field(type: "Builder")]
     #[GQL\FieldBuilder("NoteFieldBuilder", ["option1" => "value1"])]
     public array $notes;
 
@@ -53,9 +53,9 @@ class Planet
     public Planet $closestPlanet;
 
     /**
-     * @GQL\Field(fieldBuilder={"NoteFieldBuilder", {"option1": "value1"}})
+     * @GQL\Field(type="Builder", fieldBuilder={"NoteFieldBuilder", {"option1": "value1"}})
      */
-    #[GQL\Field(fieldBuilder: ["NoteFieldBuilder", ["option1" => "value1"]])]
+    #[GQL\Field(type: "Builder", fieldBuilder: ["NoteFieldBuilder", ["option1" => "value1"]])]
     public array $notesDeprecated;
 
     /**

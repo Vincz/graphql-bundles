@@ -32,8 +32,8 @@ final class Union extends Metadata
     public ?string $typeResolver;
 
     /**
-     * @param string|null $name        The GraphQL name of the union
-     * @param string[]    $types       List of types included in the union
+     * @param string|null $name         The GraphQL name of the union
+     * @param string[]    $types        List of types included in the union
      * @param string|null $typeResolver The resolve type expression
      */
     public function __construct(string $name = null, array $types = [], string $typeResolver = null)

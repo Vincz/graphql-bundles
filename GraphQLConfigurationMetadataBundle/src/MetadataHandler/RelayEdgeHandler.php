@@ -6,14 +6,13 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
-use \ReflectionClass;
-use Overblog\GraphQLBundle\Relay\Connection\EdgeInterface;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
-
 use Overblog\GraphQLBundle\Extension\BuilderExtension;
+use Overblog\GraphQLBundle\Relay\Connection\EdgeInterface;
+use ReflectionClass;
 
 class RelayEdgeHandler extends ObjectHandler
 {
@@ -24,12 +23,12 @@ class RelayEdgeHandler extends ObjectHandler
         }
 
         $typeConfiguration = parent::addConfiguration($configuration, $reflectionClass, $typeMetadata);
-        if ($typeConfiguration !== null) {
+        if (null !== $typeConfiguration) {
             /** @var ObjectConfiguration $typeConfiguration */
             $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
                 'type' => BuilderExtension::TYPE_FIELDS,
                 'name' => 'relay-edge',
-                'configuration' => ['nodeType' => $typeMetadata->node]
+                'configuration' => ['nodeType' => $typeMetadata->node],
             ]));
         }
 

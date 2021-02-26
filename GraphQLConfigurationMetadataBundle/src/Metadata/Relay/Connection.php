@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\Relay;
 
 use Attribute;
-
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata\Type;
 
 /**

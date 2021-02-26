@@ -232,15 +232,11 @@ class ObjectHandler extends MetadataHandler
             throw new MetadataConfigurationException(sprintf('The metadata %s can only be applied to public method. The method "%s" is not public.', $this->formatMetadata('Field'), $reflector->getName()));
         }
 
-        $fieldBuilder = $this->getFirstMetadataMatching($metadatas, Metadata\FieldBuilder::class);
         if (isset($fieldMetadata->type)) {
             $type = $fieldMetadata->type;
-        } elseif ($fieldBuilder || $fieldMetadata->fieldBuilder) {
-            // Assume type will be set by the field builder
-            $type = null;
         } else {
             try {
-                $type = $this->typeGuesser->guessType($reflectionClass, $reflector, self::VALID_OUTPUT_TYPES);
+                $type = $this->typeGuesser->guessType($reflectionClass, $reflector, TypeConfiguration::VALID_OUTPUT_TYPES);
             } catch (TypeGuessingException $e) {
                 $message = sprintf('The attribute "type" on %s is missing on %s "%s" and cannot be auto-guessed from the following type guessers:'."\n%s\n", $this->formatMetadata($fieldMetadataName), $reflector instanceof ReflectionProperty ? 'property' : 'method', $reflector->getName(), $e->getMessage());
 
@@ -386,7 +382,7 @@ class ObjectHandler extends MetadataHandler
         $arguments = [];
         foreach ($method->getParameters() as $index => $parameter) {
             try {
-                $gqlType = $this->typeGuesser->guessType($reflectionClass, $parameter, self::VALID_INPUT_TYPES);
+                $gqlType = $this->typeGuesser->guessType($reflectionClass, $parameter, TypeConfiguration::VALID_INPUT_TYPES);
             } catch (TypeGuessingException $exception) {
                 throw new MetadataConfigurationException(sprintf('Argument n°%s "$%s" on method "%s" cannot be auto-guessed from the following type guessers:'."\n%s\n", $index + 1, $parameter->getName(), $method->getName(), $exception->getMessage()));
             }

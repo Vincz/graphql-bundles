@@ -7,12 +7,11 @@ namespace Overblog\GraphQL\Bundle\ConfigurationXmlBundle\Tests;
 use Overblog\GraphQL\Bundle\ConfigurationXmlBundle\ConfigurationXmlParser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
-
 use const DIRECTORY_SEPARATOR;
 
 class ConfigurationXmlParserTest extends WebTestCase
 {
-    public function testBrokenXml():void
+    public function testBrokenXml(): void
     {
         $dirname = __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR.'broken';
         $this->expectException(InvalidConfigurationException::class);

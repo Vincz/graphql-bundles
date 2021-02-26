@@ -58,12 +58,12 @@ class ConfigurationMetadataParser extends ConfigurationFilesParser
         return $this->configuration;
     }
 
-    protected function parseFileClassMap(SplFileInfo $file):void
+    protected function parseFileClassMap(SplFileInfo $file): void
     {
         $this->processFile($file, true);
     }
 
-    protected function parseFile(SplFileInfo $file):void
+    protected function parseFile(SplFileInfo $file): void
     {
         $this->processFile($file);
     }

@@ -21,18 +21,6 @@ use Reflector;
 
 abstract class MetadataHandler
 {
-    /**
-     * @see https://facebook.github.io/graphql/draft/#sec-Input-and-Output-Types
-     */
-    const VALID_INPUT_TYPES = [TypeConfiguration::TYPE_SCALAR, TypeConfiguration::TYPE_ENUM, TypeConfiguration::TYPE_INPUT];
-    const VALID_OUTPUT_TYPES = [
-        TypeConfiguration::TYPE_SCALAR,
-        TypeConfiguration::TYPE_OBJECT,
-        TypeConfiguration::TYPE_INTERFACE,
-        TypeConfiguration::TYPE_UNION,
-        TypeConfiguration::TYPE_ENUM,
-    ];
-
     protected ClassesTypesMap $classesTypesMap;
     protected MetadataReaderInterface $reader;
     protected TypeGuesserInterface $typeGuesser;

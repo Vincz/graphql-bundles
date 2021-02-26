@@ -19,7 +19,7 @@ class Planet
      * @GQL\InputField(type="String!", defaultValue="Sun")
      */
     #[GQL\InputField(type: "String!")]
-    protected string $name = "Sun";
+    protected string $name = 'Sun';
 
     /**
      * @GQL\InputField(type="Int!")

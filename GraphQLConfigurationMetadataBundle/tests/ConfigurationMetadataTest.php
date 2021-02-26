@@ -33,9 +33,7 @@ use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
 use Overblog\GraphQLBundle\Extension\BuilderExtension;
 use SplFileInfo;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-
 use Symfony\Component\Finder\Finder;
-
 use function sprintf;
 
 abstract class ConfigurationMetadataTest extends WebTestCase
@@ -56,7 +54,6 @@ abstract class ConfigurationMetadataTest extends WebTestCase
     protected array $doctrineMapping = [
         'text[]' => '[String]',
     ];
-    
 
     public function formatMetadata(string $metadata): string
     {
@@ -83,7 +80,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             $this->classesTypesMap,
             $reader,
             $this->typeGuesser,
-            $this->schemas
+            $this->schemas,
         ];
         $objectHandler = new ObjectHandler(...$resolverArgs);
         $resolvers = new ArrayIterator([
@@ -107,9 +104,9 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         }
         $directories = array_values(array_map(fn (SplFileInfo $dir) => $dir->getPathname(), iterator_to_array($finder->getIterator())));
         $directories = [...$directories, ...$includeDirectories];
-        
+
         $generator = new ConfigurationMetadataParser($reader, $this->classesTypesMap, $resolvers, $directories);
-        
+
         return $generator->getConfiguration();
     }
 
@@ -144,9 +141,9 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'name' => 'friends',
                     'type' => '[Character]',
                     'description' => 'The friends of the character',
-                    'resolver' => "@=resolver('App\\MyResolver::getFriends')"
+                    'resolver' => "@=resolver('App\\MyResolver::getFriends')",
                 ],
-            ]
+            ],
         ], $interface->toArray());
     }
 
@@ -160,27 +157,27 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'fields' => [
                 [
                     'name' => 'race',
-                    'type' => 'Race'
+                    'type' => 'Race',
                 ],
                 [
                     'name' => 'name',
                     'type' => 'String!',
-                    'description' => 'The name of the character'
+                    'description' => 'The name of the character',
                 ],
                 [
                     'name' => 'friends',
                     'type' => '[Character]',
                     'description' => 'The friends of the character',
-                    'resolver' => "@=resolver('App\\MyResolver::getFriends')"
+                    'resolver' => "@=resolver('App\\MyResolver::getFriends')",
                 ],
             ],
         ], $object->toArray());
     }
 
-    public function testTypeObjectWithProviderFields():void
+    public function testTypeObjectWithProviderFields(): void
     {
         $object = $this->getType('Droid', ObjectConfiguration::class);
-        
+
         $this->assertEquals([
             'name' => 'Droid',
             'description' => 'The Droid type',
@@ -197,7 +194,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'override_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
                 [
                     'name' => 'planet_armorResistance',
@@ -206,7 +203,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
             ],
         ], $object->toArray());
@@ -221,19 +218,18 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'interfaces' => ['Character'],
             'fieldsResolver' => '@=value',
             'fields' => [
-                ['name' => 'realName','type' => 'String!', 'extensions' => [['name' => 'access', 'configuration' => "hasRole('SITH_LORD')"]]],
-                ['name' => 'location','type' => 'String!',  'extensions' => [['name' => 'public', 'configuration' => "hasRole('SITH_LORD')"]]],
-                ['name' => 'currentMaster','type' => 'Sith', 'resolver' => "@=service('master_resolver').getMaster(value)"],
+                ['name' => 'realName', 'type' => 'String!', 'extensions' => [['name' => 'access', 'configuration' => "hasRole('SITH_LORD')"]]],
+                ['name' => 'location', 'type' => 'String!',  'extensions' => [['name' => 'public', 'configuration' => "hasRole('SITH_LORD')"]]],
+                ['name' => 'currentMaster', 'type' => 'Sith', 'resolver' => "@=service('master_resolver').getMaster(value)"],
 
                 ['name' => 'name', 'type' => 'String!', 'description' => 'The name of the character'],
                 ['name' => 'friends', 'type' => '[Character]', 'description' => 'The friends of the character', 'resolver' => "@=resolver('App\\MyResolver::getFriends')"],
-                
-                
+
                 [
                     'name' => 'victims',
                     'type' => '[Character]',
                     'arguments' => [
-                        ['name' => 'jediOnly', 'type' => 'Boolean', 'description' => 'Only Jedi victims', 'defaultValue' => false]
+                        ['name' => 'jediOnly', 'type' => 'Boolean', 'description' => 'Only Jedi victims', 'defaultValue' => false],
                     ],
                     'resolver' => '@=call(value.getVictims, arguments({jediOnly: "Boolean"}, args))',
                 ],
@@ -241,10 +237,10 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'extensions' => [
                 ['name' => 'access', 'configuration' => 'isAuthenticated()'],
                 ['name' => 'public', 'configuration' => 'isAuthenticated()'],
-            ]
+            ],
         ], $object->toArray());
     }
-    
+
     public function testTypeObjectWithFieldBuilder(): void
     {
         $object = $this->getType('Planet', ObjectConfiguration::class);
@@ -258,31 +254,32 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'notes',
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]]
-                    ]
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
+                    ],
+                    'type' => 'Builder',
                 ],
                 [
                     'name' => 'closestPlanet',
                     'type' => 'Planet',
                     'resolver' => "@=resolver('closest_planet', [args['filter']])",
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]]
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
                     ],
                 ],
                 [
                     'name' => 'notesDeprecated',
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]]
-                    ]
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
+                    ],
+                    'type' => 'Builder',
                 ],
                 [
                     'name' => 'closestPlanetDeprecated',
                     'type' => 'Planet',
                     'resolver' => "@=resolver('closest_planet', [args['filter']])",
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]]
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
                     ],
-                    
                 ],
             ],
         ], $object->toArray());
@@ -302,10 +299,10 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'configuration' => [
                         'type' => BuilderExtension::TYPE_FIELDS,
                         'name' => 'MyFieldsBuilder',
-                        'configuration' => ['param1' => 'val1']
-                    ]
-                ]
-            ]
+                        'configuration' => ['param1' => 'val1'],
+                    ],
+                ],
+            ],
         ], $object->toArray());
     }
 
@@ -323,16 +320,15 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         ], $object->toArray());
     }
 
-
     public function testInput(): void
     {
         $input = $this->getType('PlanetInput', InputConfiguration::class);
-        
+
         $this->assertEquals([
             'name' => 'PlanetInput',
             'description' => 'Planet Input type description',
             'fields' => [
-                ['name' => 'name', 'type' => 'String!', 'defaultValue' => "Sun"],
+                ['name' => 'name', 'type' => 'String!', 'defaultValue' => 'Sun'],
                 ['name' => 'population', 'type' => 'Int!'],
                 ['name' => 'description', 'type' => 'String!'],
                 ['name' => 'diameter', 'type' => 'Int'],
@@ -350,8 +346,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'description' => 'The armored interface',
             'typeResolver' => '@=resolver(\'character_type\', [value])',
             'extensions' => [
-                ['name' => 'CustomExtension', 'configuration' => ['config1' => 12]]
-            ]
+                ['name' => 'CustomExtension', 'configuration' => ['config1' => 12]],
+            ],
         ], $interface->toArray());
     }
 
@@ -370,7 +366,6 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         ], $interface->toArray());
     }
 
-    
     public function testUnion(): void
     {
         $union = $this->getType('ResultSearch', UnionConfiguration::class);
@@ -380,7 +375,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'types' => ['Hero', 'Droid', 'Sith'],
             'typeResolver' => '@=value.getType()',
         ], $union->toArray());
-        
+
         $union = $this->getType('SearchResult2', UnionConfiguration::class);
         $this->assertEquals([
             'name' => 'SearchResult2',
@@ -395,11 +390,10 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'Killable',
             'types' => ['Hero', 'Mandalorian',  'Sith'],
-            'typeResolver' => '@=value.getType()'
+            'typeResolver' => '@=value.getType()',
         ], $union->toArray());
     }
 
-    
     public function testInterfaceAutoguessed(): void
     {
         $interface = $this->getType('Mandalorian', ObjectConfiguration::class);
@@ -416,7 +410,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
             ],
         ], $interface->toArray());
@@ -436,17 +430,16 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $scalar = $this->getType('MyScalar', ScalarConfiguration::class);
         $this->assertEquals([
             'name' => 'MyScalar',
-            'scalarType' => '@=newObject(\'App\Type\EmailType\')'
+            'scalarType' => '@=newObject(\'App\Type\EmailType\')',
         ], $scalar->toArray());
 
         $scalar = $this->getType('MyScalar2', ScalarConfiguration::class);
         $this->assertEquals([
             'name' => 'MyScalar2',
-            'scalarType' => '@=newObject(\'App\Type\EmailType\')'
+            'scalarType' => '@=newObject(\'App\Type\EmailType\')',
         ], $scalar->toArray());
     }
 
-    
     public function testProviderRootQuery(): void
     {
         $object = $this->getType('RootQuery', ObjectConfiguration::class);
@@ -461,32 +454,32 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_searchPlanet',
                     'type' => '[Planet]',
-                    'arguments' => [['name' => 'keyword', 'type' => 'String!', ]],
+                    'arguments' => [['name' => 'keyword', 'type' => 'String!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchPlanet, arguments({keyword: \"String!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
                 [
                     'name' => 'planet_searchStar',
                     'type' => '[Planet]',
-                    'arguments' => [['name' => 'distance', 'type' => 'Int!', ]],
+                    'arguments' => [['name' => 'distance', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchStar, arguments({distance: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
                 [
                     'name' => 'planet_isPlanetDestroyed',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
             ],
         ], $object->toArray());
@@ -501,28 +494,27 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_createPlanet',
                     'type' => 'Planet',
-                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', ]],
+                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanet, arguments({planetInput: \"PlanetInput!\"}, args))",
                     'extensions' => [
                         ['name' => 'public', 'configuration' => 'override_public'],
                         ['name' => 'access', 'configuration' => 'default_access'],
-                    ]
+                    ],
                 ],
                 [
                     'name' => 'planet_destroyPlanet',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
             ],
         ], $object->toArray());
     }
 
-    
     public function testProvidersMultischema(): void
     {
         $object = $this->getType('RootQuery2', ObjectConfiguration::class);
@@ -541,19 +533,18 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
                 [
                     'name' => 'planet_isPlanetDestroyed',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
-                
             ],
         ], $object->toArray());
 
@@ -569,28 +560,27 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'planet_createPlanetSchema2',
                     'type' => 'Planet',
-                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!', ]],
+                    'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanetSchema2, arguments({planetInput: \"PlanetInput!\"}, args))",
                     'extensions' => [
                         ['name' => 'public', 'configuration' => 'override_public'],
                         ['name' => 'access', 'configuration' => 'default_access'],
-                    ]
+                    ],
                 ],
                 [
                     'name' => 'planet_destroyPlanet',
                     'type' => 'Boolean!',
-                    'arguments' => [['name' => 'planetId', 'type' => 'Int!', ]],
+                    'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
                         ['name' => 'access', 'configuration' => 'default_access'],
                         ['name' => 'public', 'configuration' => 'default_public'],
-                    ]
+                    ],
                 ],
-                
             ],
         ], $object->toArray());
     }
-    
+
     public function testDoctrineGuessing(): void
     {
         $object = $this->getType('Lightsaber', ObjectConfiguration::class);
@@ -615,7 +605,6 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             ], $object->toArray());
     }
 
-    
     public function testArgsAndReturnGuessing(): void
     {
         $object = $this->getType('Battle', ObjectConfiguration::class);
@@ -626,26 +615,26 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'name' => 'planet',
                     'type' => 'Planet',
                     'extensions' => [
-                        ['name' => 'complexity', 'configuration' => '@=100 + childrenComplexity']
-                    ]
+                        ['name' => 'complexity', 'configuration' => '@=100 + childrenComplexity'],
+                    ],
                 ],
                 [
                     'name' => 'casualties',
                     'type' => 'Int',
                     'arguments' => [
-                        ['name' => 'areaId', 'type' => 'Int!', ],
-                        ['name' => 'raceId', 'type' => 'String!', ],
-                        ['name' => 'dayStart', 'type' => 'Int', ],
-                        ['name' => 'dayEnd', 'type' => 'Int', ],
+                        ['name' => 'areaId', 'type' => 'Int!'],
+                        ['name' => 'raceId', 'type' => 'String!'],
+                        ['name' => 'dayStart', 'type' => 'Int'],
+                        ['name' => 'dayEnd', 'type' => 'Int'],
                         ['name' => 'nameStartingWith', 'type' => 'String', 'defaultValue' => ''],
-                        ['name' => 'planet', 'type' => 'PlanetInput', ],
+                        ['name' => 'planet', 'type' => 'PlanetInput'],
                         ['name' => 'away', 'type' => 'Boolean', 'defaultValue' => false],
-                        ['name' => 'maxDistance', 'type' => 'Float', ],
+                        ['name' => 'maxDistance', 'type' => 'Float'],
                     ],
                     'resolver' => '@=call(value.getCasualties, arguments({areaId: "Int!", raceId: "String!", dayStart: "Int", dayEnd: "Int", nameStartingWith: "String", planet: "PlanetInput", away: "Boolean", maxDistance: "Float"}, args))',
                     'extensions' => [
-                        ['name' => 'complexity', 'configuration' => '@=childrenComplexity * 5']
-                    ]
+                        ['name' => 'complexity', 'configuration' => '@=childrenComplexity * 5'],
+                    ],
                 ],
             ],
         ], $object->toArray());
@@ -657,17 +646,16 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'EnemiesConnection',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]]
-            ]
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]],
+            ],
         ], $connection->toArray());
 
         $edge = $this->getType('EnemiesConnectionEdge', ObjectConfiguration::class);
         $this->assertEquals([
             'name' => 'EnemiesConnectionEdge',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]]
-            ]
-
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
+            ],
         ], $edge->toArray());
     }
 
@@ -677,16 +665,16 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'FriendsConnection',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS,'name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]]
-            ]
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]],
+            ],
         ], $connection->toArray());
 
         $edge = $this->getType('FriendsConnectionEdge', ObjectConfiguration::class);
         $this->assertEquals([
             'name' => 'FriendsConnectionEdge',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS,'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]]
-            ]
+                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
+            ],
         ], $edge->toArray());
     }
 

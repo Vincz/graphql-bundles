@@ -9,7 +9,7 @@ use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Reader\MetadataReaderInt
 
 class ConfigurationAnnotationTest extends ConfigurationMetadataTest
 {
-    public function getMetadataReader():MetadataReaderInterface
+    public function getMetadataReader(): MetadataReaderInterface
     {
         return new AnnotationReader(null, false);
     }

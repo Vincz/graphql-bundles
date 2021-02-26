@@ -6,13 +6,13 @@ namespace Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataHandler;
 
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\Metadata;
 use Overblog\GraphQL\Bundle\ConfigurationMetadataBundle\MetadataConfigurationException;
-use \ReflectionClass;
-use Overblog\GraphQLBundle\Relay\Connection\ConnectionInterface;
 use Overblog\GraphQLBundle\Configuration\Configuration;
 use Overblog\GraphQLBundle\Configuration\ExtensionConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Overblog\GraphQLBundle\Extension\BuilderExtension;
+use Overblog\GraphQLBundle\Relay\Connection\ConnectionInterface;
+use ReflectionClass;
 
 class RelayConnectionHandler extends ObjectHandler
 {
@@ -27,7 +27,7 @@ class RelayConnectionHandler extends ObjectHandler
         }
 
         $typeConfiguration = parent::addConfiguration($configuration, $reflectionClass, $typeMetadata);
-        if ($typeConfiguration !== null) {
+        if (null !== $typeConfiguration) {
             /** @var ObjectConfiguration $typeConfiguration */
             $edgeType = $typeMetadata->edge ?? false;
             if (!$edgeType) {
@@ -36,7 +36,7 @@ class RelayConnectionHandler extends ObjectHandler
                 $objectConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
                     'type' => BuilderExtension::TYPE_FIELDS,
                     'name' => 'relay-edge',
-                    'configuration' => ['nodeType' => $typeMetadata->node]
+                    'configuration' => ['nodeType' => $typeMetadata->node],
                 ]));
                 $configuration->addType($objectConfiguration);
             }
@@ -44,7 +44,7 @@ class RelayConnectionHandler extends ObjectHandler
             $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
                 'type' => BuilderExtension::TYPE_FIELDS,
                 'name' => 'relay-connection',
-                'configuration' => ['edgeType' => $edgeType]
+                'configuration' => ['edgeType' => $edgeType],
             ]));
         }
 

@@ -18,7 +18,7 @@ class CustomScalarNode implements NodeInterface
         $scalarConfiguration->setDescription(Description::get($node));
         $scalarConfiguration->addExtensions(Extensions::get($node));
         $mustOverride = sprintf('%s::%s', __CLASS__, 'mustOverrideConfig');
-        ;
+
         $scalarConfiguration->setSerialize($mustOverride);
         $scalarConfiguration->setParseValue($mustOverride);
         $scalarConfiguration->setParseLiteral($mustOverride);

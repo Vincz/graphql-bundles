@@ -28,6 +28,7 @@ class InputField extends Metadata
 
     /**
      * Default value
+     *
      * @var mixed
      */
     public $defaultValue;

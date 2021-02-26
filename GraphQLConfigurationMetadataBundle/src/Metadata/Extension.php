@@ -27,8 +27,8 @@ class Extension extends Metadata
     public $configuration;
 
     /**
-     * @param string $name           The name of the extension
-     * @param mixed  $configuration  The extension configuration
+     * @param string $name          The name of the extension
+     * @param mixed  $configuration The extension configuration
      */
     public function __construct(string $name, $configuration)
     {
