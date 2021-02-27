@@ -1,0 +1,8 @@
+parameters:
+
+services:
+    Overblog\GraphQL\Bundle\ConfigurationYamlXmlBundle\ConfigurationYamlParser:
+        arguments:
+            - '%graphql.configuration.directories.yaml%'
+        tags:
+            - { name: 'overblog_graphql.configuration.provider' }
