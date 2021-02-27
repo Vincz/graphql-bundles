@@ -35,11 +35,11 @@ class ScalarHandler extends MetadataHandler
         $gqlName = $this->getScalarName($reflectionClass, $scalarMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
 
-        $scalarConfiguration = new ScalarConfiguration($gqlName);
-        $scalarConfiguration->setDescription($this->getDescription($metadatas));
-        $scalarConfiguration->setDeprecation($this->getDeprecation($metadatas));
-        $scalarConfiguration->addExtensions($this->getExtensions($metadatas));
-        $scalarConfiguration->setOrigin($this->getOrigin($reflectionClass));
+        $scalarConfiguration = ScalarConfiguration::get($gqlName)
+            ->setDescription($this->getDescription($metadatas))
+            ->setDeprecation($this->getDeprecation($metadatas))
+            ->addExtensions($this->getExtensions($metadatas))
+            ->setOrigin($this->getOrigin($reflectionClass));
 
         if (isset($scalarMetadata->scalarType)) {
             $scalarConfiguration->setScalarType($this->formatExpression($scalarMetadata->scalarType));

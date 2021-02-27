@@ -14,7 +14,7 @@ use Overblog\GraphQLBundle\Configuration\FieldConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 use Overblog\GraphQLBundle\Extension\Builder\BuilderExtension;
-use Overblog\GraphQLBundle\Extension\ComplexityExtension;
+use Overblog\GraphQLBundle\Extension\Complexity\ComplexityExtension;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -54,10 +54,10 @@ class ObjectHandler extends MetadataHandler
         $gqlName = $this->getTypeName($reflectionClass, $typeMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
 
-        $objectConfiguration = new ObjectConfiguration($gqlName);
-        $objectConfiguration->setDescription($this->getDescription($metadatas));
-        $objectConfiguration->setDeprecation($this->getDeprecation($metadatas));
-        $objectConfiguration->setOrigin($this->getOrigin($reflectionClass));
+        $objectConfiguration = ObjectConfiguration::get($gqlName)
+            ->setDescription($this->getDescription($metadatas))
+            ->setDeprecation($this->getDeprecation($metadatas))
+            ->setOrigin($this->getOrigin($reflectionClass));
 
         $currentValue = null !== $this->getOperationType($gqlName) ? sprintf("service('%s')", $this->formatNamespaceForExpression($reflectionClass->getName())) : 'value';
 
@@ -244,18 +244,19 @@ class ObjectHandler extends MetadataHandler
             }
         }
         $fieldName = $fieldMetadata->name ?? $reflector->getName();
-        $fieldConfiguration = new FieldConfiguration($fieldName, $type);
-        $fieldConfiguration->setDescription($this->getDescription($metadatas));
-        $fieldConfiguration->setDeprecation($this->getDeprecation($metadatas));
-        $fieldConfiguration->addExtensions($this->getExtensions($metadatas));
-        $fieldConfiguration->setOrigin($this->getOrigin($reflector));
+        $fieldConfiguration = FieldConfiguration::get($fieldName, $type)
+            ->setDescription($this->getDescription($metadatas))
+            ->setDeprecation($this->getDeprecation($metadatas))
+            ->addExtensions($this->getExtensions($metadatas))
+            ->setOrigin($this->getOrigin($reflector));
 
         /** @var Metadata\Arg[] $argAnnotations */
         $argAnnotations = array_merge($this->getMetadataMatching($metadatas, Metadata\Arg::class), $fieldMetadata->args);
         $arguments = [];
         foreach ($argAnnotations as $arg) {
-            $argConfiguration = new ArgumentConfiguration($arg->name, $arg->type);
-            $argConfiguration->setDescription($arg->description);
+            $argConfiguration = ArgumentConfiguration::get($arg->name, $arg->type)
+                ->setDescription($arg->description);
+
             if (isset($arg->default)) {
                 $argConfiguration->setDefaultValue($arg->default);
             }
@@ -291,10 +292,11 @@ class ObjectHandler extends MetadataHandler
         /**  handle legacy args builders */
         if ($fieldMetadata->argsBuilder) {
             if (is_array($fieldMetadata->argsBuilder) || is_string($fieldMetadata->argsBuilder)) {
-                $builderConfiguration = ['type' => BuilderExtension::TYPE_ARGS];
-                $builderConfiguration['name'] = is_string($fieldMetadata->argsBuilder) ? $fieldMetadata->argsBuilder : $fieldMetadata->argsBuilder[0];
-                $builderConfiguration['configuration'] = is_string($fieldMetadata->argsBuilder) ? [] : $fieldMetadata->argsBuilder[1];
-                $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, $builderConfiguration));
+                $builderConfiguration = [
+                    'name' => is_string($fieldMetadata->argsBuilder) ? $fieldMetadata->argsBuilder : $fieldMetadata->argsBuilder[0],
+                    'configuration' => is_string($fieldMetadata->argsBuilder) ? [] : $fieldMetadata->argsBuilder[1],
+                ];
+                $fieldConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::NAME, $builderConfiguration));
             } else {
                 throw new MetadataConfigurationException(sprintf('The attribute "argsBuilder" on metadata %s defined on "%s" must be a string or an array where first index is the builder name and the second is the config.', $this->formatMetadata($fieldMetadataName), $reflector->getName()));
             }
@@ -302,17 +304,19 @@ class ObjectHandler extends MetadataHandler
         /** handle legacy field builders */
         if ($fieldMetadata->fieldBuilder) {
             if (is_array($fieldMetadata->fieldBuilder) || is_string($fieldMetadata->fieldBuilder)) {
-                $builderConfiguration = ['type' => BuilderExtension::TYPE_FIELD];
-                $builderConfiguration['name'] = is_string($fieldMetadata->fieldBuilder) ? $fieldMetadata->fieldBuilder : $fieldMetadata->fieldBuilder[0];
-                $builderConfiguration['configuration'] = is_string($fieldMetadata->fieldBuilder) ? [] : $fieldMetadata->fieldBuilder[1];
-                $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, $builderConfiguration));
+                $builderConfiguration = [
+                    'name' => is_string($fieldMetadata->fieldBuilder) ? $fieldMetadata->fieldBuilder : $fieldMetadata->fieldBuilder[0],
+                    'configuration' => is_string($fieldMetadata->fieldBuilder) ? [] : $fieldMetadata->fieldBuilder[1],
+                ];
+
+                $fieldConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::NAME, $builderConfiguration));
             } else {
                 throw new MetadataConfigurationException(sprintf('The attribute "fieldBuilder" on metadata %s defined on "%s" must be a string or an array where first index is the builder name and the second is the config.', $this->formatMetadata($fieldMetadataName), $reflector->getName()));
             }
         }
 
         if (isset($fieldMetadata->complexity)) {
-            $fieldConfiguration->addExtension(new ExtensionConfiguration(ComplexityExtension::NAME, $this->formatExpression($fieldMetadata->complexity)));
+            $fieldConfiguration->addExtension(ExtensionConfiguration::get(ComplexityExtension::NAME, $this->formatExpression($fieldMetadata->complexity)));
         }
 
         return $fieldConfiguration;
@@ -387,8 +391,9 @@ class ObjectHandler extends MetadataHandler
                 throw new MetadataConfigurationException(sprintf('Argument n°%s "$%s" on method "%s" cannot be auto-guessed from the following type guessers:'."\n%s\n", $index + 1, $parameter->getName(), $method->getName(), $exception->getMessage()));
             }
 
-            $argumentConfiguration = new ArgumentConfiguration($parameter->getName(), $gqlType);
-            $argumentConfiguration->setOrigin($this->getOrigin($parameter));
+            $argumentConfiguration = ArgumentConfiguration::get($parameter->getName(), $gqlType)
+                ->setOrigin($this->getOrigin($parameter));
+
             if ($parameter->isDefaultValueAvailable()) {
                 $argumentConfiguration->setDefaultValue($parameter->getDefaultValue());
             }

@@ -30,11 +30,11 @@ class InterfaceHandler extends ObjectHandler
         $gqlName = $this->getInterfaceName($reflectionClass, $interfaceMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
 
-        $interfaceConfiguration = new InterfaceConfiguration($gqlName);
-        $interfaceConfiguration->setDescription($this->getDescription($metadatas));
-        $interfaceConfiguration->setDeprecation($this->getDeprecation($metadatas));
-        $interfaceConfiguration->addExtensions($this->getExtensions($metadatas));
-        $interfaceConfiguration->setOrigin($this->getOrigin($reflectionClass));
+        $interfaceConfiguration = InterfaceConfiguration::get($gqlName)
+            ->setDescription($this->getDescription($metadatas))
+            ->setDeprecation($this->getDeprecation($metadatas))
+            ->addExtensions($this->getExtensions($metadatas))
+            ->setOrigin($this->getOrigin($reflectionClass));
 
         $fieldsFromProperties = $this->getGraphQLTypeFieldsFromAnnotations($reflectionClass, $this->getClassProperties($reflectionClass));
         $fieldsFromMethods = $this->getGraphQLTypeFieldsFromAnnotations($reflectionClass, $reflectionClass->getMethods());

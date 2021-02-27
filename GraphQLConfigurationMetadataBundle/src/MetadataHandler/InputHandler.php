@@ -39,11 +39,11 @@ class InputHandler extends MetadataHandler
         $gqlName = $this->getInputName($reflectionClass, $inputMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
 
-        $inputConfiguration = new InputConfiguration($gqlName);
-        $inputConfiguration->setDescription($this->getDescription($metadatas));
-        $inputConfiguration->setDeprecation($this->getDeprecation($metadatas));
-        $inputConfiguration->addExtensions($this->getExtensions($metadatas));
-        $inputConfiguration->setOrigin($this->getOrigin($reflectionClass));
+        $inputConfiguration = InputConfiguration::get($gqlName)
+            ->setDescription($this->getDescription($metadatas))
+            ->setDeprecation($this->getDeprecation($metadatas))
+            ->addExtensions($this->getExtensions($metadatas))
+            ->setOrigin($this->getOrigin($reflectionClass));
 
         $fields = $this->getGraphQLInputFieldsFromMetadatas($reflectionClass, $this->getClassProperties($reflectionClass));
 
@@ -98,11 +98,11 @@ class InputHandler extends MetadataHandler
                 }
             }
 
-            $fieldConfiguration = new InputFieldConfiguration($reflector->getName(), $fieldType);
-            $fieldConfiguration->setDescription($this->getDescription($metadatas));
-            $fieldConfiguration->setDeprecation($this->getDeprecation($metadatas));
-            $fieldConfiguration->addExtensions($this->getExtensions($metadatas));
-            $fieldConfiguration->setOrigin($this->getOrigin($reflector));
+            $fieldConfiguration = InputFieldConfiguration::get($reflector->getName(), $fieldType)
+                ->setDescription($this->getDescription($metadatas))
+                ->setDeprecation($this->getDeprecation($metadatas))
+                ->addExtensions($this->getExtensions($metadatas))
+                ->setOrigin($this->getOrigin($reflector));
 
             if ($fieldMetadata instanceof Metadata\InputField) {
                 if (null !== $fieldMetadata->defaultValue) {

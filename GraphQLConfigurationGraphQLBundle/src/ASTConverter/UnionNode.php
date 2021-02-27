@@ -10,12 +10,12 @@ use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
 
 class UnionNode implements NodeInterface
 {
-    public static function toConfiguration(Node $node): TypeConfiguration
+    public static function toConfiguration(string $name, Node $node): TypeConfiguration
     {
-        $unionConfiguration = new UnionConfiguration('');
-        $unionConfiguration->setDeprecation(Deprecated::get($node));
-        $unionConfiguration->setDescription(Description::get($node));
-        $unionConfiguration->addExtensions(Extensions::get($node));
+        $unionConfiguration = UnionConfiguration::get($name)
+            ->setDeprecation(Deprecated::get($node))
+            ->setDescription(Description::get($node))
+            ->addExtensions(Extensions::get($node));
 
         if (!empty($node->types)) {
             $types = [];

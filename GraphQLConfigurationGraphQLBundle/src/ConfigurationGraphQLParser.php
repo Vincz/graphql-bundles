@@ -83,8 +83,7 @@ class ConfigurationGraphQLParser extends ConfigurationFilesParser
              */
             if (isset($typeDef->kind) && in_array($typeDef->kind, array_keys(self::DEFINITION_TYPE_MAPPING))) {
                 $class = sprintf('\\%s\\ASTConverter\\%sNode', __NAMESPACE__, ucfirst(self::DEFINITION_TYPE_MAPPING[$typeDef->kind]));
-                $typeConfiguration = call_user_func([$class, 'toConfiguration'], $typeDef);
-                $typeConfiguration->setName($typeDef->name->value);
+                $typeConfiguration = call_user_func([$class, 'toConfiguration'], $typeDef->name->value, $typeDef);
                 $this->configuration->addType($typeConfiguration);
             } else {
                 self::throwUnsupportedDefinitionNode($typeDef);

@@ -11,18 +11,18 @@ use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 
 class EnumNode implements NodeInterface
 {
-    public static function toConfiguration(Node $node): TypeConfiguration
+    public static function toConfiguration(string $name, Node $node): TypeConfiguration
     {
-        $enumConfiguration = new EnumConfiguration('');
-        $enumConfiguration->setDeprecation(Deprecated::get($node));
-        $enumConfiguration->setDescription(Description::get($node));
-        $enumConfiguration->addExtensions(Extensions::get($node));
+        $enumConfiguration = EnumConfiguration::get($name)
+            ->setDeprecation(Deprecated::get($node))
+            ->setDescription(Description::get($node))
+            ->addExtensions(Extensions::get($node));
 
         foreach ($node->values as $value) {
-            $valueConfiguration = new EnumValueConfiguration($value->name->value, $value->name->value);
-            $valueConfiguration->setDeprecation(Deprecated::get($value));
-            $valueConfiguration->setDescription(Description::get($value));
-            $valueConfiguration->addExtensions(Extensions::get($value));
+            $valueConfiguration = EnumValueConfiguration::get($value->name->value, $value->name->value)
+                ->setDeprecation(Deprecated::get($value))
+                ->setDescription(Description::get($value))
+                ->addExtensions(Extensions::get($value));
 
             $enumConfiguration->addValue($valueConfiguration);
         }

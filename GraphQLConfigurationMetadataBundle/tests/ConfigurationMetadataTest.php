@@ -30,7 +30,7 @@ use Overblog\GraphQLBundle\Configuration\InterfaceConfiguration;
 use Overblog\GraphQLBundle\Configuration\ObjectConfiguration;
 use Overblog\GraphQLBundle\Configuration\ScalarConfiguration;
 use Overblog\GraphQLBundle\Configuration\UnionConfiguration;
-use Overblog\GraphQLBundle\Extension\BuilderExtension;
+use Overblog\GraphQLBundle\Extension\Builder\BuilderExtension;
 use SplFileInfo;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Finder\Finder;
@@ -254,7 +254,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'notes',
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
                     ],
                     'type' => 'Builder',
                 ],
@@ -263,13 +263,13 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Planet',
                     'resolver' => "@=resolver('closest_planet', [args['filter']])",
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
                     ],
                 ],
                 [
                     'name' => 'notesDeprecated',
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_FIELD, 'name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
                     ],
                     'type' => 'Builder',
                 ],
@@ -278,7 +278,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Planet',
                     'resolver' => "@=resolver('closest_planet', [args['filter']])",
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['type' => BuilderExtension::TYPE_ARGS, 'name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
+                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
                     ],
                 ],
             ],
@@ -297,7 +297,6 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => BuilderExtension::NAME,
                     'configuration' => [
-                        'type' => BuilderExtension::TYPE_FIELDS,
                         'name' => 'MyFieldsBuilder',
                         'configuration' => ['param1' => 'val1'],
                     ],
@@ -646,7 +645,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'EnemiesConnection',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]],
+                ['name' => 'builder', 'configuration' => ['name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]],
             ],
         ], $connection->toArray());
 
@@ -654,7 +653,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'EnemiesConnectionEdge',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
+                ['name' => 'builder', 'configuration' => ['name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
             ],
         ], $edge->toArray());
     }
@@ -665,7 +664,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'FriendsConnection',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]],
+                ['name' => 'builder', 'configuration' => ['name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]],
             ],
         ], $connection->toArray());
 
@@ -673,7 +672,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'FriendsConnectionEdge',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['type' => BuilderExtension::TYPE_FIELDS, 'name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
+                ['name' => 'builder', 'configuration' => ['name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
             ],
         ], $edge->toArray());
     }

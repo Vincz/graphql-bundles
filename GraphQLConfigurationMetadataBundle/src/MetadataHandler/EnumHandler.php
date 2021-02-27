@@ -35,11 +35,11 @@ class EnumHandler extends MetadataHandler
         $gqlName = $this->getEnumName($reflectionClass, $enumMetadata);
         $metadatas = $this->getMetadatas($reflectionClass);
 
-        $enumConfiguration = new EnumConfiguration($gqlName);
-        $enumConfiguration->setDescription($this->getDescription($metadatas));
-        $enumConfiguration->setDeprecation($this->getDeprecation($metadatas));
-        $enumConfiguration->addExtensions($this->getExtensions($metadatas));
-        $enumConfiguration->setOrigin($this->getOrigin($reflectionClass));
+        $enumConfiguration = EnumConfiguration::get($gqlName)
+            ->setDescription($this->getDescription($metadatas))
+            ->setDeprecation($this->getDeprecation($metadatas))
+            ->addExtensions($this->getExtensions($metadatas))
+            ->setOrigin($this->getOrigin($reflectionClass));
 
         // Annotation @EnumValue handling
         $enumValues = array_merge($this->getMetadataMatching($metadatas, Metadata\EnumValue::class), $enumMetadata->values);
@@ -48,11 +48,11 @@ class EnumHandler extends MetadataHandler
             $reflectionConstant = new ReflectionClassConstant($reflectionClass->getName(), $name);
             $valueMetadatas = $this->getMetadatas($reflectionConstant);
 
-            $enumValueConfig = new EnumValueConfiguration($name, $value);
-            $enumValueConfig->setDescription($this->getDescription($valueMetadatas));
-            $enumValueConfig->setDeprecation($this->getDeprecation($valueMetadatas));
-            $enumValueConfig->addExtensions($this->getExtensions($valueMetadatas));
-            $enumValueConfig->setOrigin($this->getOrigin($reflectionConstant));
+            $enumValueConfig = EnumValueConfiguration::get($name, $value)
+                ->setDescription($this->getDescription($valueMetadatas))
+                ->setDeprecation($this->getDeprecation($valueMetadatas))
+                ->addExtensions($this->getExtensions($valueMetadatas))
+                ->setOrigin($this->getOrigin($reflectionConstant));
 
             // Search matching @EnumValue handling
             $enumValueAnnotation = current(array_filter($enumValues, fn ($enumValueAnnotation) => $enumValueAnnotation->name === $name));

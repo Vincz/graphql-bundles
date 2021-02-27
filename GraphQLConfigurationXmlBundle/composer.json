@@ -5,7 +5,7 @@
     "repositories": {
         "overblog/graphql-bundle": {
             "type": "path",
-            "url": "../../GraphQLBundle",
+            "url": "../GraphQLBundle",
             "options": {
                 "symlink": true
             }

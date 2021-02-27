@@ -11,12 +11,13 @@ use RuntimeException;
 
 class CustomScalarNode implements NodeInterface
 {
-    public static function toConfiguration(Node $node): TypeConfiguration
+    public static function toConfiguration(string $name, Node $node): TypeConfiguration
     {
-        $scalarConfiguration = new ScalarConfiguration('');
-        $scalarConfiguration->setDeprecation(Deprecated::get($node));
-        $scalarConfiguration->setDescription(Description::get($node));
-        $scalarConfiguration->addExtensions(Extensions::get($node));
+        $scalarConfiguration = ScalarConfiguration::get($name)
+            ->setDeprecation(Deprecated::get($node))
+            ->setDescription(Description::get($node))
+            ->addExtensions(Extensions::get($node));
+
         $mustOverride = sprintf('%s::%s', __CLASS__, 'mustOverrideConfig');
 
         $scalarConfiguration->setSerialize($mustOverride);

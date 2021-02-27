@@ -9,5 +9,5 @@ use Overblog\GraphQLBundle\Configuration\TypeConfiguration;
 
 interface NodeInterface
 {
-    public static function toConfiguration(Node $node): TypeConfiguration;
+    public static function toConfiguration(string $name, Node $node): TypeConfiguration;
 }

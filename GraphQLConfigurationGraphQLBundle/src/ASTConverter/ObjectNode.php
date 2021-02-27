@@ -14,21 +14,22 @@ class ObjectNode implements NodeInterface
 {
     protected const TYPENAME = 'object';
 
-    public static function toConfiguration(Node $node): TypeConfiguration
+    public static function toConfiguration(string $name, Node $node): TypeConfiguration
     {
         $fieldsType = Fields::TYPE_FIELDS;
         switch (static::TYPENAME) {
             case 'object':
-                $configuration = new ObjectConfiguration('');
+                $configuration = ObjectConfiguration::get($name);
                 break;
             case 'interface':
-                $configuration = new InterfaceConfiguration('');
+                $configuration = InterfaceConfiguration::get($name);
                 break;
             case 'input-object':
-                $configuration = new InputConfiguration('');
+                $configuration = InputConfiguration::get($name);
                 $fieldsType = Fields::TYPE_INPUT_FIELDS;
                 break;
         }
+
         $configuration->setDeprecation(Deprecated::get($node));
         $configuration->setDescription(Description::get($node));
         $configuration->addExtensions(Extensions::get($node));

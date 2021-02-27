@@ -31,10 +31,10 @@ class Fields
 
         if (!empty($node->$property)) {
             foreach ($node->$property as $definition) {
-                $configuration = new $class($definition->name->value, Type::get($definition));
-                $configuration->setDeprecation(Deprecated::get($definition));
-                $configuration->setDescription(Description::get($definition));
-                $configuration->addExtensions(Extensions::get($definition));
+                $configuration = $class::get($definition->name->value, Type::get($definition))
+                    ->setDeprecation(Deprecated::get($definition))
+                    ->setDescription(Description::get($definition))
+                    ->addExtensions(Extensions::get($definition));
 
                 if (self::TYPE_FIELDS === $type) {
                     if (!empty($definition->arguments)) {

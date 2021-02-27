@@ -82,7 +82,7 @@ abstract class MetadataHandler
         $extensionsMeta = $this->getMetadataMatching($metadatas, Metadata\Extension::class);
         $extensions = [];
         foreach ($extensionsMeta as $extensionMeta) {
-            $extensions[] = new ExtensionConfiguration($extensionMeta->name, $extensionMeta->configuration);
+            $extensions[] = ExtensionConfiguration::get($extensionMeta->name, $extensionMeta->configuration);
         }
 
         return $extensions;
