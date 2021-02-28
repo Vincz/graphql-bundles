@@ -192,8 +192,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => '[Planet]',
                     'resolver' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getAllowedPlanetsForDroids, arguments({}, args))',
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'override_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'override_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
                 [
@@ -201,8 +201,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Int!',
                     'resolver' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getArmorResistance, arguments({}, args))',
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
             ],
@@ -218,8 +218,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'interfaces' => ['Character'],
             'fieldsResolver' => '@=value',
             'fields' => [
-                ['name' => 'realName', 'type' => 'String!', 'extensions' => [['name' => 'access', 'configuration' => "hasRole('SITH_LORD')"]]],
-                ['name' => 'location', 'type' => 'String!',  'extensions' => [['name' => 'public', 'configuration' => "hasRole('SITH_LORD')"]]],
+                ['name' => 'realName', 'type' => 'String!', 'extensions' => [['alias' => 'access', 'configuration' => "hasRole('SITH_LORD')"]]],
+                ['name' => 'location', 'type' => 'String!',  'extensions' => [['alias' => 'public', 'configuration' => "hasRole('SITH_LORD')"]]],
                 ['name' => 'currentMaster', 'type' => 'Sith', 'resolver' => "@=service('master_resolver').getMaster(value)"],
 
                 ['name' => 'name', 'type' => 'String!', 'description' => 'The name of the character'],
@@ -235,8 +235,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 ],
             ],
             'extensions' => [
-                ['name' => 'access', 'configuration' => 'isAuthenticated()'],
-                ['name' => 'public', 'configuration' => 'isAuthenticated()'],
+                ['alias' => 'access', 'configuration' => 'isAuthenticated()'],
+                ['alias' => 'public', 'configuration' => 'isAuthenticated()'],
             ],
         ], $object->toArray());
     }
@@ -254,7 +254,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                 [
                     'name' => 'notes',
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
+                        ['alias' => BuilderExtension::ALIAS, 'configuration' => ['name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
                     ],
                     'type' => 'Builder',
                 ],
@@ -263,13 +263,13 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Planet',
                     'resolver' => "@=resolver('closest_planet', [args['filter']])",
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
+                        ['alias' => BuilderExtension::ALIAS, 'configuration' => ['name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
                     ],
                 ],
                 [
                     'name' => 'notesDeprecated',
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
+                        ['alias' => BuilderExtension::ALIAS, 'configuration' => ['name' => 'NoteFieldBuilder', 'configuration' => ['option1' => 'value1']]],
                     ],
                     'type' => 'Builder',
                 ],
@@ -278,7 +278,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Planet',
                     'resolver' => "@=resolver('closest_planet', [args['filter']])",
                     'extensions' => [
-                        ['name' => BuilderExtension::NAME, 'configuration' => ['name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
+                        ['alias' => BuilderExtension::ALIAS, 'configuration' => ['name' => 'PlanetFilterArgBuilder', 'configuration' => ['option2' => 'value2']]],
                     ],
                 ],
             ],
@@ -295,7 +295,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             ],
             'extensions' => [
                 [
-                    'name' => BuilderExtension::NAME,
+                    'alias' => BuilderExtension::ALIAS,
                     'configuration' => [
                         'name' => 'MyFieldsBuilder',
                         'configuration' => ['param1' => 'val1'],
@@ -345,7 +345,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
             'description' => 'The armored interface',
             'typeResolver' => '@=resolver(\'character_type\', [value])',
             'extensions' => [
-                ['name' => 'CustomExtension', 'configuration' => ['config1' => 12]],
+                ['alias' => 'CustomExtension', 'configuration' => ['config1' => 12]],
             ],
         ], $interface->toArray());
     }
@@ -407,8 +407,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Int!',
                     'resolver' => '@=call(service(\'Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository\').getArmorResistance, arguments({}, args))',
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
             ],
@@ -456,8 +456,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'keyword', 'type' => 'String!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchPlanet, arguments({keyword: \"String!\"}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
                 [
@@ -466,8 +466,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'distance', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').searchStar, arguments({distance: \"Int!\"}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
                 [
@@ -476,8 +476,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
             ],
@@ -496,8 +496,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanet, arguments({planetInput: \"PlanetInput!\"}, args))",
                     'extensions' => [
-                        ['name' => 'public', 'configuration' => 'override_public'],
-                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'override_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
                     ],
                 ],
                 [
@@ -506,8 +506,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
             ],
@@ -530,8 +530,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'type' => 'Planet',
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').getPlanetSchema2, arguments({}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
                 [
@@ -540,8 +540,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').isPlanetDestroyed, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
             ],
@@ -562,8 +562,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'planetInput', 'type' => 'PlanetInput!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').createPlanetSchema2, arguments({planetInput: \"PlanetInput!\"}, args))",
                     'extensions' => [
-                        ['name' => 'public', 'configuration' => 'override_public'],
-                        ['name' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'override_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
                     ],
                 ],
                 [
@@ -572,8 +572,8 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'arguments' => [['name' => 'planetId', 'type' => 'Int!']],
                     'resolver' => "@=call(service('Overblog\\\\GraphQL\\\\Bundle\\\\ConfigurationMetadataBundle\\\\Tests\\\\fixtures\\\\Repository\\\\PlanetRepository').destroyPlanet, arguments({planetId: \"Int!\"}, args))",
                     'extensions' => [
-                        ['name' => 'access', 'configuration' => 'default_access'],
-                        ['name' => 'public', 'configuration' => 'default_public'],
+                        ['alias' => 'access', 'configuration' => 'default_access'],
+                        ['alias' => 'public', 'configuration' => 'default_public'],
                     ],
                 ],
             ],
@@ -614,7 +614,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     'name' => 'planet',
                     'type' => 'Planet',
                     'extensions' => [
-                        ['name' => 'complexity', 'configuration' => '@=100 + childrenComplexity'],
+                        ['alias' => 'complexity', 'configuration' => '@=100 + childrenComplexity'],
                     ],
                 ],
                 [
@@ -632,7 +632,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
                     ],
                     'resolver' => '@=call(value.getCasualties, arguments({areaId: "Int!", raceId: "String!", dayStart: "Int", dayEnd: "Int", nameStartingWith: "String", planet: "PlanetInput", away: "Boolean", maxDistance: "Float"}, args))',
                     'extensions' => [
-                        ['name' => 'complexity', 'configuration' => '@=childrenComplexity * 5'],
+                        ['alias' => 'complexity', 'configuration' => '@=childrenComplexity * 5'],
                     ],
                 ],
             ],
@@ -645,7 +645,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'EnemiesConnection',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]],
+                ['alias' => 'builder', 'configuration' => ['name' => 'relay-connection', 'configuration' => ['edgeType' => 'EnemiesConnectionEdge']]],
             ],
         ], $connection->toArray());
 
@@ -653,7 +653,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'EnemiesConnectionEdge',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
+                ['alias' => 'builder', 'configuration' => ['name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
             ],
         ], $edge->toArray());
     }
@@ -664,7 +664,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'FriendsConnection',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]],
+                ['alias' => 'builder', 'configuration' => ['name' => 'relay-connection', 'configuration' => ['edgeType' => 'FriendsConnectionEdge']]],
             ],
         ], $connection->toArray());
 
@@ -672,7 +672,7 @@ abstract class ConfigurationMetadataTest extends WebTestCase
         $this->assertEquals([
             'name' => 'FriendsConnectionEdge',
             'extensions' => [
-                ['name' => 'builder', 'configuration' => ['name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
+                ['alias' => 'builder', 'configuration' => ['name' => 'relay-edge', 'configuration' => ['nodeType' => 'Character']]],
             ],
         ], $edge->toArray());
     }

@@ -25,7 +25,7 @@ class RelayEdgeHandler extends ObjectHandler
         $typeConfiguration = parent::addConfiguration($configuration, $reflectionClass, $typeMetadata);
         if (null !== $typeConfiguration) {
             /** @var ObjectConfiguration $typeConfiguration */
-            $typeConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::NAME, [
+            $typeConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::ALIAS, [
                 'name' => 'relay-edge',
                 'configuration' => ['nodeType' => $typeMetadata->node],
             ]));

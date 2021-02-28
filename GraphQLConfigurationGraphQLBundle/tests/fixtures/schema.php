@@ -92,7 +92,7 @@ return [
                 'name' => 'name',
                 'type' => 'String!',
                 'extensions' => [
-                    ['name' => 'access', 'configuration' => ['foo', 'bar']],
+                    ['alias' => 'access', 'configuration' => ['foo', 'bar']],
                 ],
             ],
             ['name' => 'friends', 'type' => '[Character]'],

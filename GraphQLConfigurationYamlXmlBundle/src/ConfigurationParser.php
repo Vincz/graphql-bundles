@@ -79,7 +79,7 @@ abstract class ConfigurationParser extends ConfigurationFilesParser
                 }
                 if (isset($config['builders'])) {
                     foreach ($config['builders'] as $fieldsBuilder) {
-                        $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                        $typeConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::ALIAS, [
                             'name' => $fieldsBuilder['builder'],
                             'configuration' => $fieldsBuilder['builderConfig'] ?? null,
                         ]));
@@ -99,29 +99,24 @@ abstract class ConfigurationParser extends ConfigurationFilesParser
                         }
                     }
                     if (isset($fieldConfig['builder'])) {
-                        $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::ALIAS, [
                             'name' => $fieldConfig['builder'],
-                            'configuration' => $fieldConfig['configuration'] ?? null,
+                            'configuration' => $fieldConfig['builderConfig'] ?? null,
                         ]));
                     }
                     if (isset($fieldConfig['argsBuilder'])) {
-                        if (is_string($fieldConfiguration['argsBuilder'])) {
-                            $name = $fieldConfiguration['argsBuilder'];
-                            $configuration = null;
-                        } else {
-                            $name = $fieldConfiguration['argsBuilder']['builder'];
-                            $configuration = $fieldConfiguration['argsBuilder']['config'] ?? null;
-                        }
-                        $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::NAME, [
+                        $name = $fieldConfig['argsBuilder']['builder'];
+                        $configuration = $fieldConfig['argsBuilder']['config'] ?? null;
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(BuilderExtension::ALIAS, [
                             'name' => $name,
                             'configuration' => $configuration,
                         ]));
                     }
                     if (isset($fieldConfig['access'])) {
-                        $fieldConfiguration->addExtension(new ExtensionConfiguration(AccessExtension::NAME, $fieldConfig['access']));
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(AccessExtension::ALIAS, $fieldConfig['access']));
                     }
                     if (isset($fieldConfig['public'])) {
-                        $fieldConfiguration->addExtension(new ExtensionConfiguration(IsPublicExtension::NAME, $fieldConfig['public']));
+                        $fieldConfiguration->addExtension(new ExtensionConfiguration(IsPublicExtension::ALIAS, $fieldConfig['public']));
                     }
 
                     $typeConfiguration->addField($fieldConfiguration);

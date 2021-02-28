@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Overblog\GraphQLBundle\Tests\ConfigurationProvider\Processor;
 
 use InvalidArgumentException;
-use Overblog\GraphQLBundle\ConfigurationProvider\Processor\InheritanceProcessor;
+use Overblog\GraphQL\Bundle\ConfigurationYamlXmlBundle\Processor\InheritanceProcessor;
 use PHPUnit\Framework\TestCase;
 
 class InheritanceProcessorTest extends TestCase

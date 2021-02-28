@@ -296,7 +296,7 @@ class ObjectHandler extends MetadataHandler
                     'name' => is_string($fieldMetadata->argsBuilder) ? $fieldMetadata->argsBuilder : $fieldMetadata->argsBuilder[0],
                     'configuration' => is_string($fieldMetadata->argsBuilder) ? [] : $fieldMetadata->argsBuilder[1],
                 ];
-                $fieldConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::NAME, $builderConfiguration));
+                $fieldConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::ALIAS, $builderConfiguration));
             } else {
                 throw new MetadataConfigurationException(sprintf('The attribute "argsBuilder" on metadata %s defined on "%s" must be a string or an array where first index is the builder name and the second is the config.', $this->formatMetadata($fieldMetadataName), $reflector->getName()));
             }
@@ -309,14 +309,14 @@ class ObjectHandler extends MetadataHandler
                     'configuration' => is_string($fieldMetadata->fieldBuilder) ? [] : $fieldMetadata->fieldBuilder[1],
                 ];
 
-                $fieldConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::NAME, $builderConfiguration));
+                $fieldConfiguration->addExtension(ExtensionConfiguration::get(BuilderExtension::ALIAS, $builderConfiguration));
             } else {
                 throw new MetadataConfigurationException(sprintf('The attribute "fieldBuilder" on metadata %s defined on "%s" must be a string or an array where first index is the builder name and the second is the config.', $this->formatMetadata($fieldMetadataName), $reflector->getName()));
             }
         }
 
         if (isset($fieldMetadata->complexity)) {
-            $fieldConfiguration->addExtension(ExtensionConfiguration::get(ComplexityExtension::NAME, $this->formatExpression($fieldMetadata->complexity)));
+            $fieldConfiguration->addExtension(ExtensionConfiguration::get(ComplexityExtension::ALIAS, $this->formatExpression($fieldMetadata->complexity)));
         }
 
         return $fieldConfiguration;
@@ -350,7 +350,7 @@ class ObjectHandler extends MetadataHandler
 
                     $providerExtensions = [];
                     foreach ($provider['extensions'] as $providerExtension) {
-                        if (!$providerField->hasExtension($providerExtension->getName())) {
+                        if (!$providerField->hasExtension($providerExtension->getAlias())) {
                             $providerExtensions[] = $providerExtension;
                         }
                     }
